@@ -1,0 +1,65 @@
+name: turnera-front
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: turnera
+      MYSQL_USER: turnera
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Ejecutar npm run setup}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Ejecutar npm run setup}
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - turnera_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  backend:
+    build: ${BACKEND_PATH:-../back-turnero-medico}
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: mysql
+      DB_PORT: 3306
+      MYSQL_DATABASE: turnera
+      MYSQL_USER: turnera
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Ejecutar npm run setup}
+      JWT_SECRET: ${JWT_SECRET:?Ejecutar npm run setup}
+      JWT_EXPIRATION: 3600000
+      TZ: America/Argentina/Buenos_Aires
+      JAVA_TOOL_OPTIONS: -Duser.timezone=America/Argentina/Buenos_Aires
+      TURNERA_BOOTSTRAP_ADMIN_ENABLED: ${TURNERA_BOOTSTRAP_ADMIN_ENABLED:-true}
+      TURNERA_BOOTSTRAP_ADMIN_DNI: "20123456"
+      TURNERA_BOOTSTRAP_ADMIN_NOMBRE: Ada
+      TURNERA_BOOTSTRAP_ADMIN_APELLIDO: Administradora
+      TURNERA_BOOTSTRAP_ADMIN_EMAIL: admin@turnera.local
+      TURNERA_BOOTSTRAP_ADMIN_PASSWORD: ${DEMO_PASSWORD:?Ejecutar npm run setup}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8081}:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+  frontend:
+    build: .
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - backend
+  demo:
+    image: node:22-alpine
+    profiles: ["demo"]
+    working_dir: /app
+    volumes:
+      - ./scripts:/app:ro
+    environment:
+      API_URL: http://backend:8080/api
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?Ejecutar npm run setup}
+    command: ["node", "seed-demo.mjs"]
+    depends_on:
+      - backend
+volumes:
+  turnera_data:
