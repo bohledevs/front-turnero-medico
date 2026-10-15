@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Auriculares Studio",
+    "category": "Tecnología",
+    "description": "Sonido envolvente para ir a tu ritmo.",
+    "price": 89500,
+    "stock": 8,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85",
+    "imageAlt": "Auriculares inalámbricos color naranja sobre fondo amarillo"
+  },
+  {
+    "id": 2,
+    "name": "Lámpara Mínima",
+    "category": "Casa",
+    "description": "Luz cálida para bajar un cambio.",
+    "price": 62400,
+    "stock": 3,
+    "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85",
+    "imageAlt": "Lámpara de mesa encendida en un ambiente cálido"
+  },
+  {
+    "id": 3,
+    "name": "Parlante Portátil",
+    "category": "Tecnología",
+    "description": "Tu música, adentro y afuera.",
+    "price": 47800,
+    "stock": 12,
+    "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=85",
+    "imageAlt": "Parlante portátil compacto de color oscuro"
+  },
+  {
+    "id": 4,
+    "name": "Reloj de Mesa",
+    "category": "Diseño",
+    "description": "Un pequeño recordatorio de ir sin apuro.",
+    "price": 38900,
+    "stock": 0,
+    "image": "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=85",
+    "imageAlt": "Reloj analógico minimalista apoyado sobre una mesa"
+  }
+]
