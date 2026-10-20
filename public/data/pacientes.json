@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "dni": "30123456",
+    "nombre": "Camila",
+    "apellido": "Paz",
+    "email": "camila.paz@example.test",
+    "telefono": "1144556677",
+    "rol": "PACIENTE",
+    "activo": true,
+    "fechaNacimiento": "1993-04-12",
+    "obraSocial": null,
+    "numeroAfiliado": null
+  },
+  {
+    "id": 2,
+    "dni": "28765432",
+    "nombre": "Bruno",
+    "apellido": "Luna",
+    "email": "bruno.luna@example.test",
+    "telefono": "1133224455",
+    "rol": "PACIENTE",
+    "activo": true,
+    "fechaNacimiento": "1988-09-21",
+    "obraSocial": "Cobertura Demo",
+    "numeroAfiliado": "DEMO-2048"
+  },
+  {
+    "id": 3,
+    "dni": "41234567",
+    "nombre": "Sofía",
+    "apellido": "Vega",
+    "email": "sofia.vega@example.test",
+    "telefono": null,
+    "rol": "PACIENTE",
+    "activo": true,
+    "fechaNacimiento": "2001-02-03",
+    "obraSocial": null,
+    "numeroAfiliado": null
+  }
+]

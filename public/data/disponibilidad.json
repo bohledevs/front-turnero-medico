@@ -1,0 +1,146 @@
+[
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-20T09:00:00",
+    "fechaHoraFin": "2026-10-20T09:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-20T09:30:00",
+    "fechaHoraFin": "2026-10-20T10:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-20T10:00:00",
+    "fechaHoraFin": "2026-10-20T10:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-20T10:30:00",
+    "fechaHoraFin": "2026-10-20T11:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-21T13:00:00",
+    "fechaHoraFin": "2026-10-21T13:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-21T13:30:00",
+    "fechaHoraFin": "2026-10-21T14:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-21T14:00:00",
+    "fechaHoraFin": "2026-10-21T14:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 12
+    },
+    "fechaHoraInicio": "2026-10-19T15:00:00",
+    "fechaHoraFin": "2026-10-19T15:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 12
+    },
+    "fechaHoraInicio": "2026-10-19T15:30:00",
+    "fechaHoraFin": "2026-10-19T16:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-22T09:00:00",
+    "fechaHoraFin": "2026-10-22T09:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-22T09:30:00",
+    "fechaHoraFin": "2026-10-22T10:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-22T10:00:00",
+    "fechaHoraFin": "2026-10-22T10:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 10
+    },
+    "fechaHoraInicio": "2026-10-22T10:30:00",
+    "fechaHoraFin": "2026-10-22T11:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-23T13:00:00",
+    "fechaHoraFin": "2026-10-23T13:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-23T13:30:00",
+    "fechaHoraFin": "2026-10-23T14:00:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 11
+    },
+    "fechaHoraInicio": "2026-10-23T14:00:00",
+    "fechaHoraFin": "2026-10-23T14:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 12
+    },
+    "fechaHoraInicio": "2026-10-21T15:00:00",
+    "fechaHoraFin": "2026-10-21T15:30:00"
+  },
+  {
+    "id": null,
+    "doctor": {
+      "id": 12
+    },
+    "fechaHoraInicio": "2026-10-21T15:30:00",
+    "fechaHoraFin": "2026-10-21T16:00:00"
+  }
+]

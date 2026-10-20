@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "nombre": "Clínica médica",
+    "descripcion": "Atención integral para personas adultas."
+  },
+  {
+    "id": 2,
+    "nombre": "Cardiología",
+    "descripcion": "Prevención y cuidado de la salud cardiovascular."
+  },
+  {
+    "id": 3,
+    "nombre": "Dermatología",
+    "descripcion": null
+  }
+]

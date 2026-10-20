@@ -1,0 +1,26 @@
+[
+  {
+    "id": 10,
+    "nombre": "Lucía",
+    "apellido": "Fernández",
+    "matriculaNacional": "MN-45821",
+    "especialidadId": 1,
+    "especialidadNombre": "Clínica médica"
+  },
+  {
+    "id": 11,
+    "nombre": "Mateo",
+    "apellido": "Ríos",
+    "matriculaNacional": "MN-61234",
+    "especialidadId": 2,
+    "especialidadNombre": "Cardiología"
+  },
+  {
+    "id": 12,
+    "nombre": "Elena",
+    "apellido": "Suárez",
+    "matriculaNacional": "MN-73890",
+    "especialidadId": 3,
+    "especialidadNombre": "Dermatología"
+  }
+]

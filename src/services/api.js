@@ -1,4 +1,12 @@
+import { staticRequest } from "./staticApi.js";
+
 const SESSION_KEY = "turnera.session";
+export const dataMode =
+  import.meta.env?.VITE_DATA_MODE === "static" ||
+  import.meta.env?.MODE === "static"
+    ? "static"
+    : "api";
+
 export function getSession() {
   try {
     const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
@@ -30,6 +38,17 @@ export async function request(
   { method = "GET", body, signal, authenticated = true } = {},
 ) {
   const session = authenticated ? getSession() : null;
+  if (dataMode === "static") {
+    try {
+      return await staticRequest(path, { method, body, signal, session });
+    } catch (error) {
+      if (error.status === 401 && authenticated) {
+        saveSession(null);
+        window.dispatchEvent(new Event("turnera:expired"));
+      }
+      throw error;
+    }
+  }
   let response;
   try {
     response = await fetch("/api" + path, {

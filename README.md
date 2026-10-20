@@ -54,11 +54,30 @@ La base se guarda en el volumen `turnera-front_turnera_data`. Los puertos HTTP s
 
 ```powershell
 npm.cmd install
-docker compose up -d mysql backend
 npm.cmd run dev
 ```
 
-Vite reenvía /api a localhost:8081. Para otro backend: establecer API_TARGET antes de iniciar Vite. No usar VITE_* para secretos. Con el frontend Docker ejecutándose en 5173, detenerlo primero (`docker compose stop frontend`) para liberar el puerto del servidor de desarrollo.
+El modo predeterminado usa la API y Vite reenvía `/api` a `localhost:8081`. Para levantar la API local antes del frontend, ejecutar `docker compose up -d mysql backend`; para otro backend, establecer `API_TARGET` antes de iniciar Vite.
+
+### Modo estático (Actividad 03)
+
+No requiere backend, MySQL ni Docker:
+
+```powershell
+npm.cmd run dev -- --mode static
+```
+
+La aplicación conserva las mismas pantallas y lee los fixtures locales de `public/data/`. Las reservas, cambios de estado y altas se simulan en memoria y se reinician al recargar la página. Para generar una compilación estática: `npm.cmd run build -- --mode static`. Sin `--mode static`, se conserva el modo API.
+
+Accesos ficticios exclusivos para este modo:
+
+| Perfil | Email | Contraseña |
+| --- | --- | --- |
+| Paciente (id 1) | `paciente@demo.example.test` | `DemoPaciente123` |
+| Médico (id 10) | `medico@demo.example.test` | `DemoMedico123` |
+| Administrador (id 99) | `admin@demo.example.test` | `DemoAdmin123` |
+
+Los fixtures contienen datos ficticios, nunca datos reales ni tokens del entorno. Sus fechas de turnos se desplazan para mantener el recorrido vigente; la disponibilidad usa las franjas horarias locales y la fecha elegida. Para ver estados vacíos, aplicar una búsqueda sin coincidencias o filtrar turnos por una fecha sin resultados. Para ver errores, intentar ingresar con una contraseña incorrecta o reservar un horario que ya no esté disponible.
 
 ## Validación
 
@@ -66,6 +85,12 @@ Vite reenvía /api a localhost:8081. Para otro backend: establecer API_TARGET an
 npm.cmd run lint
 npm.cmd test
 npm.cmd run build
+```
+
+Para compilar también la variante estática:
+
+```powershell
+npm.cmd run build -- --mode static
 ```
 
 Con el entorno Docker y los datos demo cargados, ejecutar también:
@@ -96,10 +121,11 @@ src/
   pages/        Pantallas por función
   context/      Sesión y permisos de navegación
   hooks/        Consulta y limpieza de efectos
-  services/     Contratos HTTP y errores
+  services/     Selección API/estático, contratos y simulación local
   lib/          Fechas y reglas de presentación
   styles.css    Diseño adaptable
 docker/         Nginx y proxy de API
+public/data/    Fixtures JSON ficticios alineados con los DTO
 scripts/        Configuración y datos ficticios por API
 tests/          Pruebas de reglas del frontend
 docs/           Dominio, alcance y verificaciones
