@@ -1,0 +1,197 @@
+{
+  "content": [
+    {
+      "id": 1001,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 1
+      },
+      "fechaHoraInicio": "2026-10-19T23:30:00",
+      "fechaHoraFin": "2026-10-19T23:50:00",
+      "estado": "RESERVADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1002,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 1
+      },
+      "fechaHoraInicio": "2026-10-20T09:00:00",
+      "fechaHoraFin": "2026-10-20T09:30:00",
+      "estado": "CONFIRMADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1003,
+      "doctor": {
+        "id": 11
+      },
+      "paciente": {
+        "id": 1
+      },
+      "fechaHoraInicio": "2026-10-21T10:00:00",
+      "fechaHoraFin": "2026-10-21T10:30:00",
+      "estado": "RESERVADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1004,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 1
+      },
+      "fechaHoraInicio": "2026-10-17T11:00:00",
+      "fechaHoraFin": "2026-10-17T11:30:00",
+      "estado": "ATENDIDO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1005,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 2
+      },
+      "fechaHoraInicio": "2026-10-19T21:00:00",
+      "fechaHoraFin": "2026-10-19T21:30:00",
+      "estado": "CANCELADO_PACIENTE",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1006,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 2
+      },
+      "fechaHoraInicio": "2026-10-20T10:30:00",
+      "fechaHoraFin": "2026-10-20T11:00:00",
+      "estado": "CONFIRMADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1007,
+      "doctor": {
+        "id": 11
+      },
+      "paciente": {
+        "id": 3
+      },
+      "fechaHoraInicio": "2026-10-19T20:30:00",
+      "fechaHoraFin": "2026-10-19T21:00:00",
+      "estado": "RESERVADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1008,
+      "doctor": {
+        "id": 11
+      },
+      "paciente": {
+        "id": 3
+      },
+      "fechaHoraInicio": "2026-10-16T10:30:00",
+      "fechaHoraFin": "2026-10-16T11:00:00",
+      "estado": "AUSENTE",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1009,
+      "doctor": {
+        "id": 12
+      },
+      "paciente": {
+        "id": 2
+      },
+      "fechaHoraInicio": "2026-10-23T15:00:00",
+      "fechaHoraFin": "2026-10-23T15:30:00",
+      "estado": "CANCELADO_MEDICO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1010,
+      "doctor": {
+        "id": 11
+      },
+      "paciente": {
+        "id": 1
+      },
+      "fechaHoraInicio": "2026-10-24T13:00:00",
+      "fechaHoraFin": "2026-10-24T13:30:00",
+      "estado": "CONFIRMADO",
+      "esSobreturned": true,
+      "justificacionSobreturned": "Control adicional solicitado por la persona paciente."
+    },
+    {
+      "id": 1011,
+      "doctor": {
+        "id": 12
+      },
+      "paciente": {
+        "id": 2
+      },
+      "fechaHoraInicio": "2026-10-21T15:30:00",
+      "fechaHoraFin": "2026-10-21T16:00:00",
+      "estado": "ATENDIDO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    },
+    {
+      "id": 1012,
+      "doctor": {
+        "id": 10
+      },
+      "paciente": {
+        "id": 3
+      },
+      "fechaHoraInicio": "2026-10-22T10:00:00",
+      "fechaHoraFin": "2026-10-22T10:30:00",
+      "estado": "RESERVADO",
+      "esSobreturned": false,
+      "justificacionSobreturned": null
+    }
+  ],
+  "pageable": {
+    "pageNumber": 0,
+    "pageSize": 12,
+    "sort": {
+      "empty": true,
+      "sorted": false,
+      "unsorted": true
+    },
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "last": true,
+  "totalPages": 1,
+  "totalElements": 12,
+  "size": 12,
+  "number": 0,
+  "sort": {
+    "empty": true,
+    "sorted": false,
+    "unsorted": true
+  },
+  "first": true,
+  "numberOfElements": 12,
+  "empty": false
+}

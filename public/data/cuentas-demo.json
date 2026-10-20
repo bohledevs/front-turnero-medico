@@ -1,0 +1,44 @@
+[
+  {
+    "email": "paciente@demo.example.test",
+    "password": "DemoPaciente123",
+    "response": {
+      "id": 1,
+      "nombre": "Camila",
+      "apellido": "Paz",
+      "email": "paciente@demo.example.test",
+      "rol": "PACIENTE",
+      "token": "static-paciente-demo",
+      "tokenType": "Bearer",
+      "expiresIn": 3600
+    }
+  },
+  {
+    "email": "medico@demo.example.test",
+    "password": "DemoMedico123",
+    "response": {
+      "id": 10,
+      "nombre": "Lucía",
+      "apellido": "Fernández",
+      "email": "medico@demo.example.test",
+      "rol": "MEDICO",
+      "token": "static-medico-demo",
+      "tokenType": "Bearer",
+      "expiresIn": 3600
+    }
+  },
+  {
+    "email": "admin@demo.example.test",
+    "password": "DemoAdmin123",
+    "response": {
+      "id": 99,
+      "nombre": "Alex",
+      "apellido": "Administrador",
+      "email": "admin@demo.example.test",
+      "rol": "ADMIN",
+      "token": "static-admin-demo",
+      "tokenType": "Bearer",
+      "expiresIn": 3600
+    }
+  }
+]

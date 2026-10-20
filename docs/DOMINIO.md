@@ -14,6 +14,14 @@ RESERVADO permite CONFIRMADO o cancelación. CONFIRMADO permite ATENDIDO, AUSENT
 
 Todos los horarios se interpretan en America/Argentina/Buenos_Aires. Los LocalDateTime sin zona se conservan como hora local del consultorio, sin convertirlos con toISOString al enviar reservas.
 
+## Modo estático
+
+`npm run dev -- --mode static` selecciona un adaptador local en `src/services/staticApi.js`; todas las pantallas siguen consumiendo las funciones de `src/services/api.js`. El adaptador carga `public/data/` y simula autenticación, registro, reservas, transiciones, sobreturnos y operaciones administrativas en memoria. Al recargar se restauran los fixtures iniciales. La opción predeterminada continúa siendo la API real.
+
+Los archivos de especialidades, profesionales, disponibilidad, pacientes y turnos contienen los campos y anidamientos de sus DTO backend. `turnos.json` es una respuesta paginada con `content`, `pageable`, `sort` y metadatos; el adaptador aplica los filtros/paginación solicitados y devuelve la misma estructura. `cuentas-demo.json` es un archivo de soporte del modo local: sus perfiles de respuesta siguen `LoginResponse` y sus contraseñas/tokens son ficticios. No se incluyen datos de personas reales, tokens del entorno ni secretos.
+
+Los turnos parten de la fecha de referencia `2026-10-19`; el adaptador los desplaza para mantenerlos demostrables en el presente. Las franjas disponibles contienen fechas representativas de los días semanales configurados; el adaptador solo ofrece una franja cuando coincide el día de semana de la fecha consultada, trasladándola a esa fecha. El `id` de disponibilidad es `null`, como en la respuesta calculada por el backend. Los valores conservan el formato `LocalDateTime` (hora local de Buenos Aires, sin zona).
+
 ## Contrato implementado
 
 | Pantalla                       | Operaciones reales                                                 |
