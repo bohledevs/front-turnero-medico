@@ -112,7 +112,11 @@ Las pruebas cubren permisos de transición, estados terminales, límites UTF-8 d
 5. Ingresar como administrador. Dar de alta una especialidad y un profesional; configurar su agenda semanal completa.
 6. Probar una ruta directa, por ejemplo /profesionales/1, y recargar. Nginx conserva el routing SPA.
 7. Reducir el ancho del navegador para revisar la versión móvil.
+## Prototipo en Figma
 
+El flujo y las pantallas de la aplicación están disponibles en el siguiente prototipo:
+
+[Ver prototipo en Figma](https://www.figma.com/design/sG2DFO6kln0dmeYP3QUpFB/Front-turnera-medica?node-id=0-1&t=uiRZF5BWhdD9WePY-1)
 ## Estructura
 
 ```text
