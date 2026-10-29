@@ -73,6 +73,6 @@ No se suministró una maqueta Figma. Se creó una propuesta visual propia; no se
 
 ## Decisiones de implementación
 
-React Router declarativo y estado local, sin Redux ni framework de UI. fetch centralizado para JWT y errores fieldErrors. JWT guardado en sessionStorage para conservar sesión al recargar dentro de la pestaña, con vencimiento y cierre por 401. La autorización definitiva sigue en Spring Security. En un despliegue público corresponde evaluar cookies HttpOnly/BFF, HTTPS y política CSP.
+React Router declarativo y estado local para formularios y consultas. Redux Toolkit administra los favoritos de profesionales con un slice compartido; ver [UVA 5](UVA5-REDUX.md). Sin framework de UI. fetch centralizado para JWT y errores fieldErrors. JWT guardado en sessionStorage para conservar sesión al recargar dentro de la pestaña, con vencimiento y cierre por 401. La autorización definitiva sigue en Spring Security. En un despliegue público corresponde evaluar cookies HttpOnly/BFF, HTTPS y política CSP.
 
 Nginx sirve la SPA y redirige /api al backend en la misma red Docker: el navegador usa un único origen. El entorno Docker tiene base y volumen propios; no reutiliza la base del backend ya existente. Las cuentas de demostración son ficticias y se cargan por API mediante un perfil explícito.

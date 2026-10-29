@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/auth";
+import FavoritesLink from "./FavoritesLink";
 import { ROLES, initials } from "../lib/domain";
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -56,6 +57,7 @@ export default function Layout() {
             <NavLink to="/profesionales" onClick={close}>
               Profesionales
             </NavLink>
+            <FavoritesLink onNavigate={close} />
             {user?.rol === "PACIENTE" && (
               <NavLink to="/mis-turnos" onClick={close}>
                 Mis turnos
