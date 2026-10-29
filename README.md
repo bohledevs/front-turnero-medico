@@ -79,6 +79,12 @@ Accesos ficticios exclusivos para este modo:
 
 Los fixtures contienen datos ficticios, nunca datos reales ni tokens del entorno. Sus fechas de turnos se desplazan para mantener el recorrido vigente; la disponibilidad usa las franjas horarias locales y la fecha elegida. Para ver estados vacíos, aplicar una búsqueda sin coincidencias o filtrar turnos por una fecha sin resultados. Para ver errores, intentar ingresar con una contraseña incorrecta o reservar un horario que ya no esté disponible.
 
+## Favoritos con Redux Toolkit (UVA 5)
+
+Agregá o quitá profesionales desde sus tarjetas o perfiles. El menú muestra la cantidad y `/favoritos` permite consultar o vaciar la selección. Se conserva al navegar y se borra al recargar, ingresar, cerrar o vencer una sesión. Funciona en modo API y estático.
+
+El slice expone `addFavorite`, `removeFavorite` y `clearFavorites`. Los componentes usan `useSelector` y `useDispatch`, con un único store y `Provider` en la raíz. La implementación y su relación con la cátedra están en [docs/UVA5-REDUX.md](docs/UVA5-REDUX.md).
+
 ## Validación
 
 ```powershell
@@ -124,6 +130,7 @@ src/
   components/   Controles y piezas reutilizables
   pages/        Pantallas por función
   context/      Sesión y permisos de navegación
+  store/        Store Redux Toolkit y slice de favoritos
   hooks/        Consulta y limpieza de efectos
   services/     Selección API/estático, contratos y simulación local
   lib/          Fechas y reglas de presentación

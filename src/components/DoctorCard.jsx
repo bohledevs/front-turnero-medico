@@ -1,6 +1,7 @@
 import { ArrowUpRight, BadgeCheck, Stethoscope } from "lucide-react";
 import { Link } from "react-router-dom";
 import { fullName, initials } from "../lib/domain";
+import FavoriteButton from "./FavoriteButton";
 export default function DoctorCard({ doctor, compact = false }) {
   return (
     <article className={"doctor-card " + (compact ? "compact" : "")}>
@@ -17,6 +18,7 @@ export default function DoctorCard({ doctor, compact = false }) {
           <BadgeCheck size={15} /> Matrícula {doctor.matriculaNacional}
         </p>
       </div>
+      <FavoriteButton doctor={doctor} />
       <Link
         to={"/profesionales/" + doctor.id}
         className="button secondary small"

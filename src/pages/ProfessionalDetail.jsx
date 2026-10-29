@@ -35,6 +35,7 @@ import {
 } from "../components/Feedback";
 import Field from "../components/Field";
 import Modal from "../components/Modal";
+import FavoriteButton from "../components/FavoriteButton";
 export default function ProfessionalDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -123,6 +124,7 @@ export default function ProfessionalDetail() {
           <p className="with-icon">
             <BadgeCheck size={17} /> Matrícula {doctor.matriculaNacional}
           </p>
+          <FavoriteButton doctor={doctor} />
           <div className="profile-divider" />
           <h3>Tu próxima consulta</h3>
           <p>

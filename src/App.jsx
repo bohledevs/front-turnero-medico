@@ -12,6 +12,7 @@ import { EmptyState } from "./components/Feedback";
 import Home from "./pages/Home";
 import { Login, Register } from "./pages/AuthPages";
 import Professionals from "./pages/Professionals";
+import Favorites from "./pages/Favorites";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
 import Appointments from "./pages/Appointments";
 import Administration from "./pages/Administration";
@@ -49,6 +50,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="profesionales" element={<Professionals />} />
+        <Route path="favoritos" element={<Favorites />} />
         <Route path="profesionales/:id" element={<ProfessionalDetail />} />
         <Route path="ingresar" element={<Login />} />
         <Route path="registro" element={<Register />} />
