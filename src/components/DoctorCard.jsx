@@ -1,9 +1,11 @@
 import { ArrowUpRight, BadgeCheck, Stethoscope } from "lucide-react";
 import { Link } from "react-router-dom";
 import { fullName, initials } from "../lib/domain";
+import FavoriteButton from "./FavoriteButton";
 export default function DoctorCard({ doctor, compact = false }) {
   return (
     <article className={"doctor-card " + (compact ? "compact" : "")}>
+      <FavoriteButton doctor={doctor} />
       <div className={"avatar doctor-avatar tone-" + (doctor.id % 4)}>
         {initials(doctor)}
       </div>
