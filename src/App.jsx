@@ -15,6 +15,7 @@ import Professionals from "./pages/Professionals";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
 import Appointments from "./pages/Appointments";
 import Administration from "./pages/Administration";
+import Favorites from "./pages/Favorites";
 function ProtectedRoute({ roles }) {
   const { user } = useAuth();
   const location = useLocation();
@@ -50,6 +51,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="profesionales" element={<Professionals />} />
         <Route path="profesionales/:id" element={<ProfessionalDetail />} />
+        <Route path="favoritos" element={<Favorites />} />
         <Route path="ingresar" element={<Login />} />
         <Route path="registro" element={<Register />} />
         <Route element={<ProtectedRoute roles={["PACIENTE"]} />}>

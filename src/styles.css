@@ -374,6 +374,29 @@ select {
 .site-footer small {
   font-size: 10px;
 }
+.data-source-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 11px;
+}
+.data-source-control label {
+  font-weight: 650;
+  color: var(--ink);
+}
+.data-source-control select {
+  min-height: 36px;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-size: 11px;
+}
+.data-source-control .text-button {
+  font-size: 11px;
+}
 .home {
   padding-top: 32px;
   padding-bottom: 64px;
@@ -1842,6 +1865,14 @@ select {
   .site-footer {
     width: calc(100% - 32px);
   }
+  .site-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .data-source-control {
+    width: 100%;
+  }
   .header-inner {
     gap: 12px;
     height: 73px;
@@ -2410,4 +2441,53 @@ select {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== Favoritos (Redux Toolkit) ===== */
+.doctor-card {
+  position: relative;
+}
+.favorite-button {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.favorite-button:hover {
+  color: #b24a57;
+  border-color: #e8c5ca;
+}
+.favorite-button.active {
+  color: #b24a57;
+  background: #fbeef0;
+  border-color: #e8c5ca;
+}
+.favorite-button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--green);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: middle;
 }

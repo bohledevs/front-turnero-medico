@@ -18,9 +18,11 @@
     "verify:api": "node --env-file=.env scripts/verify-api.mjs"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.5.0",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.6"
   },
   "devDependencies": {

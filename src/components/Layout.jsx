@@ -14,11 +14,18 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 import { useAuth } from "../context/auth";
+import { selectCantidadFavoritos } from "../store/slices/favoritosSlice";
 import { ROLES, initials } from "../lib/domain";
+import { getDataMode, resetDemo, setDataMode } from "../services/api";
 export default function Layout() {
   const { user, logout } = useAuth();
+  // La barra se suscribe SOLO a la cantidad de favoritos (un número)
+  const cantidadFavoritos = useSelector(selectCantidadFavoritos);
   const [menu, setMenu] = useState(false);
+  const [dataMode, setMode] = useState(getDataMode);
+  const [notice, setNotice] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
@@ -55,6 +62,12 @@ export default function Layout() {
             </NavLink>
             <NavLink to="/profesionales" onClick={close}>
               Profesionales
+            </NavLink>
+            <NavLink to="/favoritos" onClick={close}>
+              Favoritos
+              {cantidadFavoritos > 0 && (
+                <span className="nav-badge">{cantidadFavoritos}</span>
+              )}
             </NavLink>
             {user?.rol === "PACIENTE" && (
               <NavLink to="/mis-turnos" onClick={close}>
@@ -118,6 +131,41 @@ export default function Layout() {
             turnera.
           </Link>
           <p>Más simple. Más cerca de tu salud.</p>
+        </div>
+        <div className="data-source-control">
+          <label htmlFor="data-source">Fuente de datos</label>
+          <select
+            id="data-source"
+            value={dataMode}
+            onChange={(event) => {
+              const nextMode = event.target.value;
+              setDataMode(nextMode);
+              setMode(nextMode);
+              setNotice(
+                nextMode === "static"
+                  ? "Demo local activa. Se cerró la sesión anterior."
+                  : "API real activa. Ingresá para autenticarte en el backend.",
+              );
+            }}
+          >
+            <option value="static">Demo local</option>
+            <option value="api">API real</option>
+          </select>
+          {dataMode === "static" && (
+            <button
+              className="text-button"
+              type="button"
+              onClick={() => {
+                resetDemo();
+                setNotice("Datos de la demo restablecidos.");
+              }}
+            >
+              Restablecer demo
+            </button>
+          )}
+          <span className="sr-only" role="status" aria-live="polite">
+            {notice}
+          </span>
         </div>
         <span>
           <CalendarDays size={15} /> Horarios de Buenos Aires · Argentina
