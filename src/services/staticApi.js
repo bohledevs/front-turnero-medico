@@ -9,6 +9,11 @@ const DATA_FILES = {
 
 let statePromise;
 
+// Descarta los cambios hechos en la demo y vuelve a leer los JSON originales.
+export function resetStaticState() {
+  statePromise = null;
+}
+
 export class StaticApiError extends Error {
   constructor(message, status = 0, fieldErrors = {}) {
     super(message);

@@ -1,11 +1,37 @@
-import { staticRequest } from "./staticApi.js";
+import { resetStaticState, staticRequest } from "./staticApi.js";
 
 const SESSION_KEY = "turnera.session";
-export const dataMode =
+const DATA_MODE_KEY = "turnera.dataMode";
+const DEFAULT_DATA_MODE =
   import.meta.env?.VITE_DATA_MODE === "static" ||
   import.meta.env?.MODE === "static"
     ? "static"
     : "api";
+
+// Fuente de datos elegida desde el pie de página: "static" (demo local) o "api" (backend real).
+export function getDataMode() {
+  try {
+    const mode = localStorage.getItem(DATA_MODE_KEY);
+    if (mode === "static" || mode === "api") return mode;
+  } catch {
+    // Sin almacenamiento disponible se usa el modo configurado al compilar.
+  }
+  return DEFAULT_DATA_MODE;
+}
+export function setDataMode(mode) {
+  if (mode !== "static" && mode !== "api") return;
+  try {
+    localStorage.setItem(DATA_MODE_KEY, mode);
+  } catch {
+    // Si no se puede persistir, el cambio no sobrevive a una recarga.
+  }
+  // Una sesión de una fuente no sirve en la otra.
+  saveSession(null);
+  window.dispatchEvent(new Event("turnera:logout"));
+}
+export function resetDemo() {
+  resetStaticState();
+}
 
 export function getSession() {
   try {
@@ -38,7 +64,7 @@ export async function request(
   { method = "GET", body, signal, authenticated = true } = {},
 ) {
   const session = authenticated ? getSession() : null;
-  if (dataMode === "static") {
+  if (getDataMode() === "static") {
     try {
       return await staticRequest(path, { method, body, signal, session });
     } catch (error) {
