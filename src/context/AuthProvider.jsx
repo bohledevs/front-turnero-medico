@@ -10,12 +10,18 @@ export function AuthProvider({ children }) {
       setUser(null);
       setExpired(true);
     };
+    const logout = () => {
+      saveSession(null);
+      setUser(null);
+    };
     window.addEventListener("turnera:expired", expire);
+    window.addEventListener("turnera:logout", logout);
     const timer = user
       ? setTimeout(expire, Math.max(0, user.expiresAt - Date.now()))
       : null;
     return () => {
       window.removeEventListener("turnera:expired", expire);
+      window.removeEventListener("turnera:logout", logout);
       clearTimeout(timer);
     };
   }, [user]);
