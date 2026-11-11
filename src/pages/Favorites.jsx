@@ -3,11 +3,17 @@ import { useDispatch, useSelector } from "react-redux";
 import DoctorCard from "../components/DoctorCard";
 import PageHeading from "../components/PageHeading";
 import { EmptyState } from "../components/Feedback";
-import { selectFavoritos, vaciarFavoritos } from "../store/slices/favoritosSlice";
+import {
+  selectCantidadFavoritos,
+  selectFavoritosPorEspecialidad,
+  vaciarFavoritos,
+} from "../store/slices/favoritosSlice";
 
-// Página "Mis favoritos": se suscribe a la lista completa de favoritos.
+// Página "Mis favoritos": se suscribe a los favoritos agrupados por especialidad.
+// El selector es memoizado, así que la página solo se vuelve a dibujar cuando cambian los favoritos.
 export default function Favorites() {
-  const favoritos = useSelector(selectFavoritos);
+  const cantidad = useSelector(selectCantidadFavoritos);
+  const grupos = useSelector(selectFavoritosPorEspecialidad);
   const dispatch = useDispatch();
 
   return (
@@ -17,7 +23,7 @@ export default function Favorites() {
         title="Mis favoritos"
         description="Los profesionales que guardaste para encontrarlos rápido."
         action={
-          favoritos.length > 0 && (
+          cantidad > 0 && (
             <button
               type="button"
               className="button secondary small"
@@ -28,7 +34,7 @@ export default function Favorites() {
           )
         }
       />
-      {favoritos.length === 0 ? (
+      {cantidad === 0 ? (
         <EmptyState
           title="Todavía no tenés favoritos"
           action={
@@ -40,11 +46,21 @@ export default function Favorites() {
           Tocá el corazón en la tarjeta de un profesional para guardarlo acá.
         </EmptyState>
       ) : (
-        <div className="directory-grid">
-          {favoritos.map((doctor) => (
-            <DoctorCard key={doctor.id} doctor={doctor} />
-          ))}
-        </div>
+        grupos.map(({ especialidad, doctores }) => (
+          <section className="favoritos-grupo" key={especialidad}>
+            <div className="results-heading">
+              <h2>{especialidad}</h2>
+              <span>
+                {doctores.length} profesional{doctores.length !== 1 ? "es" : ""}
+              </span>
+            </div>
+            <div className="directory-grid">
+              {doctores.map((doctor) => (
+                <DoctorCard key={doctor.id} doctor={doctor} />
+              ))}
+            </div>
+          </section>
+        ))
       )}
     </div>
   );
