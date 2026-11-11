@@ -2,10 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   api,
+  getDataMode,
   getSession,
   query,
   request,
   saveSession,
+  setDataMode,
 } from "../src/services/api.js";
 const store = new Map();
 globalThis.sessionStorage = {
@@ -66,4 +68,26 @@ test("401 limpia sesión, validaciones preservan errores y abort no se oculta", 
     api.specialties(),
     (error) => error.name === "AbortError",
   );
+});
+test("la fuente de datos elegida se persiste y cierra la sesión", () => {
+  const local = new Map();
+  globalThis.localStorage = {
+    getItem: (key) => local.get(key) ?? null,
+    setItem: (key, value) => local.set(key, value),
+    removeItem: (key) => local.delete(key),
+  };
+  saveSession({ token: "t", expiresAt: Date.now() + 60000 });
+  let logout = false;
+  window.addEventListener("turnera:logout", () => (logout = true), {
+    once: true,
+  });
+  setDataMode("static");
+  assert.equal(getDataMode(), "static");
+  assert.equal(getSession(), null);
+  assert.ok(logout);
+  setDataMode("otro");
+  assert.equal(getDataMode(), "static");
+  setDataMode("api");
+  assert.equal(getDataMode(), "api");
+  delete globalThis.localStorage;
 });
