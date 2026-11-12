@@ -6,6 +6,8 @@ import {
   selectUsuario,
   sesionVencida,
 } from "../store/slices/authSlice";
+import { cambiarUsuarioFavoritos } from "../store/slices/favoritosSlice";
+import { leerFavoritos } from "../store/favoritosStorage";
 
 // Efectos de la sesión que no son de ninguna pantalla en particular.
 // El estado está en el authSlice; la sesión se restaura al arrancar (main.jsx).
@@ -16,9 +18,12 @@ export function AuthProvider({ children }) {
   const expiresAt = usuario?.expiresAt;
 
   // Cuando cambia quién está logueado (ingreso, cierre o vencimiento de la sesión),
-  // los filtros de turnos vuelven a su valor inicial.
+  // los filtros de turnos vuelven a su valor inicial y se cargan los favoritos de esa cuenta.
   useEffect(() => {
     dispatch(reiniciarFiltrosTurnos());
+    dispatch(
+      cambiarUsuarioFavoritos({ usuarioId: userId ?? null, items: leerFavoritos(userId) }),
+    );
   }, [dispatch, userId]);
 
   // La capa de API avisa con eventos: 401 en una ruta protegida o cambio de fuente de datos.

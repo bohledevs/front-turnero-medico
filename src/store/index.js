@@ -2,18 +2,12 @@ import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer from "./slices/favoritosSlice";
 import filtrosTurnosReducer from "./slices/filtrosTurnosSlice";
 import authReducer from "./slices/authSlice";
+import { descartarFavoritosCompartidos, guardarFavoritos } from "./favoritosStorage";
 
-const STORAGE_KEY = "turnera.favoritos";
+descartarFavoritosCompartidos();
 
-// Recupera los favoritos guardados para que no se pierdan al recargar la página
-function cargarFavoritos() {
-  try {
-    const guardados = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    return Array.isArray(guardados) ? { favoritos: { items: guardados } } : undefined;
-  } catch {
-    return undefined;
-  }
-}
+// Los favoritos arrancan sin dueño: al cargar la página todavía no sabemos quién está logueado
+// (la sesión se recupera desde la cookie). AuthProvider carga la lista de esa cuenta cuando se sabe.
 
 // Store único: acá vive todo el estado global de la app.
 // Cada slice es una porción (sesión, favoritos y filtros de turnos).
@@ -25,14 +19,14 @@ export const store = configureStore({
     favoritos: favoritosReducer,
     filtrosTurnos: filtrosTurnosReducer,
   },
-  preloadedState: cargarFavoritos(),
 });
 
-// Cada vez que cambia el store, guardamos los favoritos en el navegador
+// Cada vez que cambian los favoritos, los guardamos en el navegador bajo la clave de su dueño.
+// Los cambios de otros slices (por ejemplo, los filtros) no escriben nada.
+let favoritosGuardados = store.getState().favoritos;
 store.subscribe(() => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store.getState().favoritos.items));
-  } catch {
-    // si el navegador bloquea el almacenamiento, la app sigue funcionando
-  }
+  const favoritos = store.getState().favoritos;
+  if (favoritos === favoritosGuardados) return;
+  favoritosGuardados = favoritos;
+  guardarFavoritos(favoritos.usuarioId, favoritos.items);
 });
