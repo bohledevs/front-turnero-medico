@@ -1,14 +1,23 @@
 import { createSelector, createSlice } from "@reduxjs/toolkit";
 
 // Slice de favoritos: una porción del store global.
-// Guarda los profesionales que el paciente marcó como favoritos
+// Guarda los profesionales que el usuario marcó como favoritos
 // y las funciones (reducers) que modifican esa lista.
 const favoritosSlice = createSlice({
   name: "favoritos",
   initialState: {
+    usuarioId: null, // dueño de la lista; null = navegando sin sesión
     items: [], // profesionales favoritos: { id, nombre, apellido, especialidadNombre, ... }
   },
   reducers: {
+    // dispatch(cambiarUsuarioFavoritos({ usuarioId, items }))
+    // Al cambiar de cuenta se reemplaza la lista entera por la del nuevo usuario,
+    // así nadie ve los favoritos de quien usó el navegador antes.
+    cambiarUsuarioFavoritos: (state, action) => {
+      state.usuarioId = action.payload.usuarioId ?? null;
+      state.items = action.payload.items ?? [];
+    },
+
     // dispatch(agregarFavorito(doctor)) -> action.payload = doctor
     agregarFavorito: (state, action) => {
       const doctor = action.payload;
@@ -42,8 +51,13 @@ const favoritosSlice = createSlice({
 });
 
 // Acciones para usar con dispatch desde los componentes
-export const { agregarFavorito, quitarFavorito, toggleFavorito, vaciarFavoritos } =
-  favoritosSlice.actions;
+export const {
+  agregarFavorito,
+  quitarFavorito,
+  toggleFavorito,
+  vaciarFavoritos,
+  cambiarUsuarioFavoritos,
+} = favoritosSlice.actions;
 
 // Selectores: cada componente elige a qué parte del estado se suscribe con useSelector
 export const selectFavoritos = (store) => store.favoritos.items;
