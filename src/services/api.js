@@ -1,3 +1,4 @@
+import axios from "axios";
 import { resetStaticState, staticRequest } from "./staticApi.js";
 
 const SESSION_KEY = "turnera.session";
@@ -52,6 +53,59 @@ export class ApiError extends Error {
     this.fieldErrors = fieldErrors || {};
   }
 }
+
+
+/**
+ * Cliente HTTP centralizado.
+ * Todas las solicitudes reales al backend pasan por Axios.
+ */
+export const axiosClient = axios.create({
+  baseURL: "/api",
+  headers: {
+    Accept: "application/json",
+  },
+});
+
+/**
+ * Interceptor de solicitudes.
+ * Agrega automáticamente el token JWT cuando
+ * la operación necesita autenticación.
+ */
+axiosClient.interceptors.request.use((config) => {
+  const authenticated = config.authenticated !== false;
+  const session = authenticated ? getSession() : null;
+
+  if (session?.token) {
+    config.headers.set(
+      "Authorization",
+      `Bearer ${session.token}`,
+    );
+  } else {
+    config.headers.delete("Authorization");
+  }
+
+  return config;
+});
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      error.config?.authenticated !== false
+    ) {
+      saveSession(null);
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("turnera:expired"));
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+
 export function query(values = {}) {
   return new URLSearchParams(
     Object.entries(values).filter(
@@ -59,57 +113,71 @@ export function query(values = {}) {
     ),
   ).toString();
 }
+
 export async function request(
   path,
   { method = "GET", body, signal, authenticated = true } = {},
 ) {
   const session = authenticated ? getSession() : null;
+
   if (getDataMode() === "static") {
     try {
-      return await staticRequest(path, { method, body, signal, session });
+      return await staticRequest(path, {
+        method,
+        body,
+        signal,
+        session,
+      });
     } catch (error) {
       if (error.status === 401 && authenticated) {
         saveSession(null);
         window.dispatchEvent(new Event("turnera:expired"));
       }
+
       throw error;
     }
   }
-  let response;
+
+  // Modo API: realizar la petición mediante Axios.
   try {
-    response = await fetch("/api" + path, {
+    const response = await axiosClient.request({
+      url: path,
       method,
+      data: body,
       signal,
-      headers: {
-        Accept: "application/json",
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-        ...(session ? { Authorization: "Bearer " + session.token } : {}),
-      },
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      authenticated,
     });
+
+    return response.data;
   } catch (error) {
-    if (error.name === "AbortError") throw error;
-    throw new ApiError(
-      "No pudimos conectarnos. Revisá tu conexión y volvé a intentar.",
-    );
-  }
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    if (response.status === 401 && authenticated) {
-      saveSession(null);
-      window.dispatchEvent(new Event("turnera:expired"));
+    if (axios.isCancel(error) || error.name === "AbortError") {
+      throw new DOMException(
+        "Solicitud cancelada",
+        "AbortError",
+      );
     }
+
+    // Error de conexión.
+    if (!error.response) {
+      throw new ApiError(
+        "No pudimos conectarnos. Revisá tu conexión y volvé a intentar.",
+      );
+    }
+
+    const status = error.response.status;
+    const data = error.response.data;
+
     throw new ApiError(
       data?.message ||
-        (response.status >= 500
+        (status >= 500
           ? "El servicio no está disponible en este momento. Volvé a intentar."
           : "No se pudo completar la operación."),
-      response.status,
+      status,
       data?.fieldErrors,
     );
   }
-  return data;
 }
+
 export const api = {
   login: (body) =>
     request("/auth/login", { method: "POST", body, authenticated: false }),
