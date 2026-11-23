@@ -35,6 +35,7 @@ import {
 } from "../components/Feedback";
 import Field from "../components/Field";
 import Modal from "../components/Modal";
+import DoctorAvatar from "../components/DoctorAvatar";
 export default function ProfessionalDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -115,15 +116,24 @@ export default function ProfessionalDetail() {
       </Link>
       <div className="profile-layout">
         <aside className="profile-card">
-          <div className={"avatar doctor-avatar large tone-" + (doctor.id % 4)}>
-            {initials(doctor)}
-          </div>
+          <DoctorAvatar doctor={doctor} large />
           <span className="eyebrow">{doctor.especialidadNombre}</span>
           <h1>{fullName(doctor)}</h1>
           <p className="with-icon">
-            <BadgeCheck size={17} /> Matrícula {doctor.matriculaNacional}
+            <BadgeCheck size={17} />
+            Matrícula {doctor.matriculaNacional}
           </p>
-          <div className="profile-divider" />
+          
+          <div className="profile-biography">
+            <h3>Sobre el profesional</h3>
+            <p>
+              {doctor.descripcion?.trim() ||
+              "Este profesional todavía no tiene una descripción disponible."}
+            </p>
+          </div>
+          
+        <div className="profile-divider" />
+
           <h3>Tu próxima consulta</h3>
           <p>
             Elegí una fecha para ver los horarios disponibles de este
