@@ -497,6 +497,7 @@ export async function staticRequest(
       ({ id }) => id === Number(body.especialidadId),
     );
     if (!specialty) fail("No encontramos esa especialidad.", 404);
+    
     const doctor = {
       id: data.nextIds.doctor++,
       nombre: body.nombre,
@@ -504,7 +505,12 @@ export async function staticRequest(
       matriculaNacional: body.matriculaNacional,
       especialidadId: specialty.id,
       especialidadNombre: specialty.nombre,
+
+      // Datos adicionales del perfil.
+      fotoUrl: body.fotoUrl?.trim() || null,
+      descripcion: body.descripcion?.trim() || null,
     };
+
     data.doctors.push(doctor);
     return doctor;
   }
