@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { api } from "../services/api";
+import { useDispatch, useSelector } from "react-redux";
 import { fullName, isFuture, today } from "../lib/domain";
 import Modal from "./Modal";
 import Field from "./Field";
 import { Alert } from "./Feedback";
+import {
+  crearSobreturno,
+  selectOperacionTurnosLoading,
+} from "../store/slices/turnosSlice";
 export default function ExtraAppointment({ user, doctors, onClose, onSaved }) {
-  const [busy, setBusy] = useState(false);
+  const dispatch = useDispatch();
+  const busy = useSelector(selectOperacionTurnosLoading);
   const [error, setError] = useState(null);
   async function submit(event) {
     event.preventDefault();
@@ -22,23 +27,22 @@ export default function ExtraAppointment({ user, doctors, onClose, onSaved }) {
       setError({ message: "Ingresá el motivo del sobreturno." });
       return;
     }
-    setBusy(true);
     setError(null);
     try {
-      await api.extraAppointment({
-        ...(user.rol === "ADMIN"
-          ? { doctor: { id: Number(values.doctorId) } }
-          : {}),
-        paciente: { id: Number(values.pacienteId) },
-        fechaHoraInicio: start,
-        fechaHoraFin: end,
-        justificacionSobreturned: values.justificacion.trim(),
-      });
+      await dispatch(
+        crearSobreturno({
+          ...(user.rol === "ADMIN"
+            ? { doctor: { id: Number(values.doctorId) } }
+            : {}),
+          paciente: { id: Number(values.pacienteId) },
+          fechaHoraInicio: start,
+          fechaHoraFin: end,
+          justificacionSobreturned: values.justificacion.trim(),
+        }),
+      ).unwrap();
       onSaved();
     } catch (failure) {
       setError(failure);
-    } finally {
-      setBusy(false);
     }
   }
   return (

@@ -1,5 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer from "./slices/favoritosSlice";
+import doctoresReducer from "./slices/doctoresSlice";
+import filtrosTurnosReducer from "./slices/filtrosTurnosSlice";
+import turnosReducer from "./slices/turnosSlice";
 
 const STORAGE_KEY = "turnera.favoritos";
 
@@ -7,7 +10,9 @@ const STORAGE_KEY = "turnera.favoritos";
 function cargarFavoritos() {
   try {
     const guardados = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    return Array.isArray(guardados) ? { favoritos: { items: guardados } } : undefined;
+    return Array.isArray(guardados)
+      ? { favoritos: { items: guardados } }
+      : undefined;
   } catch {
     return undefined;
   }
@@ -18,6 +23,9 @@ function cargarFavoritos() {
 export const store = configureStore({
   reducer: {
     favoritos: favoritosReducer,
+    doctores: doctoresReducer,
+    filtrosTurnos: filtrosTurnosReducer,
+    turnos: turnosReducer,
   },
   preloadedState: cargarFavoritos(),
 });
@@ -25,7 +33,10 @@ export const store = configureStore({
 // Cada vez que cambia el store, guardamos los favoritos en el navegador
 store.subscribe(() => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store.getState().favoritos.items));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(store.getState().favoritos.items),
+    );
   } catch {
     // si el navegador bloquea el almacenamiento, la app sigue funcionando
   }
