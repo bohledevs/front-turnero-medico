@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,8 +11,6 @@ import {
   Plus,
 } from "lucide-react";
 import { useAuth } from "../context/auth";
-import { api } from "../services/api";
-import useResource from "../hooks/useResource";
 import {
   STATUS,
   addDays,
@@ -32,6 +31,26 @@ import {
 } from "../components/Feedback";
 import AppointmentActions from "../components/AppointmentActions";
 import ExtraAppointment from "../components/ExtraAppointment";
+import {
+  listarDoctores,
+  selectDoctores,
+  selectDoctoresError,
+} from "../store/slices/doctoresSlice";
+import {
+  cambiarEstado,
+  cambiarFecha,
+  cambiarPagina,
+  cambiarPeriodo,
+  cambiarProfesional,
+  limpiarFiltros,
+  selectFiltrosTurnos,
+} from "../store/slices/filtrosTurnosSlice";
+import {
+  listarTurnos,
+  selectTurnos,
+  selectTurnosError,
+  selectTurnosLoading,
+} from "../store/slices/turnosSlice";
 const actionLabels = {
   CONFIRMADO: "Confirmar",
   ATENDIDO: "Marcar atendido",
@@ -42,11 +61,10 @@ const actionLabels = {
 export default function Appointments({ staff = false }) {
   const { user } = useAuth();
   const location = useLocation();
-  const [period, setPeriod] = useState("upcoming");
-  const [date, setDate] = useState(staff ? today() : "");
-  const [status, setStatus] = useState("");
-  const [doctorId, setDoctorId] = useState("");
-  const [page, setPage] = useState(0);
+  const dispatch = useDispatch();
+  const filtros = useSelector(selectFiltrosTurnos);
+  const { periodo: period, estado: status, doctorId, pagina: page } = filtros;
+  const date = filtros.fecha ?? (staff ? today() : "");
   const [action, setAction] = useState(null);
   const [extra, setExtra] = useState(false);
   const [message, setMessage] = useState(
@@ -54,44 +72,44 @@ export default function Appointments({ staff = false }) {
       ? "Tu turno se reservó correctamente. Podés verlo a continuación."
       : "",
   );
-  const doctors = useResource(
-    useCallback((signal) => api.doctors({}, signal), []),
+  const doctors = useSelector(selectDoctores);
+  const doctorsError = useSelector(selectDoctoresError);
+  const data = useSelector(selectTurnos);
+  const turnosLoading = useSelector(selectTurnosLoading);
+  const turnosError = useSelector(selectTurnosError);
+  const filtrosApi = useMemo(
+    () => ({
+      page,
+      size: 8,
+      estado: status,
+      doctorId,
+      fechaDesde: date
+        ? date + "T00:00:00"
+        : !staff && period === "upcoming"
+          ? nowLocal()
+          : undefined,
+      fechaHasta: date ? date + "T23:59:59" : undefined,
+      sort:
+        !staff && period === "all"
+          ? "fechaHoraInicio,desc"
+          : "fechaHoraInicio,asc",
+    }),
+    [date, doctorId, page, period, staff, status],
   );
-  const appointments = useResource(
-    useCallback(
-      (signal) =>
-        api.appointments(
-          {
-            page,
-            size: 8,
-            estado: status,
-            doctorId,
-            fechaDesde: date
-              ? date + "T00:00:00"
-              : !staff && period === "upcoming"
-                ? nowLocal()
-                : undefined,
-            fechaHasta: date ? date + "T23:59:59" : undefined,
-            sort:
-              !staff && period === "all"
-                ? "fechaHoraInicio,desc"
-                : "fechaHoraInicio,asc",
-          },
-          signal,
-        ),
-      [page, status, doctorId, date, staff, period],
-    ),
-  );
-  const data = appointments.data;
-  function changed(setter, value) {
-    setter(value);
-    setPage(0);
-  }
+
+  useEffect(() => {
+    dispatch(listarDoctores());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(listarTurnos(filtrosApi));
+  }, [dispatch, filtrosApi]);
+
   function saved(text) {
     setAction(null);
     setExtra(false);
     setMessage(text);
-    appointments.reload();
+    dispatch(listarTurnos(filtrosApi));
   }
   return (
     <div className="container page">
@@ -134,8 +152,7 @@ export default function Appointments({ staff = false }) {
           <button
             className={period === "upcoming" ? "active" : ""}
             onClick={() => {
-              changed(setPeriod, "upcoming");
-              setDate("");
+              dispatch(cambiarPeriodo("upcoming"));
             }}
           >
             Próximos turnos
@@ -143,8 +160,7 @@ export default function Appointments({ staff = false }) {
           <button
             className={period === "all" ? "active" : ""}
             onClick={() => {
-              changed(setPeriod, "all");
-              setDate("");
+              dispatch(cambiarPeriodo("all"));
             }}
           >
             Todos / historial
@@ -157,20 +173,24 @@ export default function Appointments({ staff = false }) {
             <button
               className="icon-button"
               aria-label="Día anterior"
-              onClick={() => changed(setDate, addDays(date || today(), -1))}
+              onClick={() =>
+                dispatch(cambiarFecha(addDays(date || today(), -1)))
+              }
             >
               <ChevronLeft size={20} />
             </button>
             <button
               className="button secondary small"
-              onClick={() => changed(setDate, today())}
+              onClick={() => dispatch(cambiarFecha(today()))}
             >
               Hoy
             </button>
             <button
               className="icon-button"
               aria-label="Día siguiente"
-              onClick={() => changed(setDate, addDays(date || today(), 1))}
+              onClick={() =>
+                dispatch(cambiarFecha(addDays(date || today(), 1)))
+              }
             >
               <ChevronRight size={20} />
             </button>
@@ -180,13 +200,13 @@ export default function Appointments({ staff = false }) {
           label="Fecha"
           type="date"
           value={date}
-          onChange={(event) => changed(setDate, event.target.value)}
+          onChange={(event) => dispatch(cambiarFecha(event.target.value))}
         />
         <Field
           as="select"
           label="Estado"
           value={status}
-          onChange={(event) => changed(setStatus, event.target.value)}
+          onChange={(event) => dispatch(cambiarEstado(event.target.value))}
         >
           <option value="">Todos los estados</option>
           {Object.entries(STATUS).map(([key, label]) => (
@@ -200,10 +220,12 @@ export default function Appointments({ staff = false }) {
             as="select"
             label="Profesional"
             value={doctorId}
-            onChange={(event) => changed(setDoctorId, event.target.value)}
+            onChange={(event) =>
+              dispatch(cambiarProfesional(event.target.value))
+            }
           >
             <option value="">Todos los profesionales</option>
-            {doctors.data?.map((doctor) => (
+            {doctors.map((doctor) => (
               <option key={doctor.id} value={doctor.id}>
                 {fullName(doctor)}
               </option>
@@ -213,19 +235,17 @@ export default function Appointments({ staff = false }) {
         {(date || status || doctorId) && (
           <button
             className="text-button"
-            onClick={() => {
-              setDate("");
-              setStatus("");
-              setDoctorId("");
-              setPage(0);
-            }}
+            onClick={() => dispatch(limpiarFiltros())}
           >
             Limpiar filtros
           </button>
         )}
       </div>
-      {doctors.error && (
-        <ResourceError error={doctors.error} retry={doctors.reload} />
+      {doctorsError && (
+        <ResourceError
+          error={doctorsError}
+          retry={() => dispatch(listarDoctores())}
+        />
       )}
       <section className="appointments-panel">
         <div className="results-heading">
@@ -237,18 +257,18 @@ export default function Appointments({ staff = false }) {
                 ? "Historial de turnos"
                 : "Tus consultas"}
           </h2>
-          {!appointments.loading && data && (
+          {!turnosLoading && data && (
             <span>
               {data.totalElements} turno{data.totalElements !== 1 ? "s" : ""}
             </span>
           )}
         </div>
-        {appointments.loading ? (
+        {turnosLoading ? (
           <Loading />
-        ) : appointments.error ? (
+        ) : turnosError ? (
           <ResourceError
-            error={appointments.error}
-            retry={appointments.reload}
+            error={turnosError}
+            retry={() => dispatch(listarTurnos(filtrosApi))}
           />
         ) : !data?.content?.length ? (
           <EmptyState
@@ -266,9 +286,7 @@ export default function Appointments({ staff = false }) {
         ) : (
           <div className="appointment-list">
             {data.content.map((turn) => {
-              const doctor = doctors.data?.find(
-                (item) => item.id === turn.doctor.id,
-              );
+              const doctor = doctors.find((item) => item.id === turn.doctor.id);
               const transitions = allowedTransitions(turn.estado, user.rol);
               return (
                 <article className="appointment-row" key={turn.id}>
@@ -331,8 +349,8 @@ export default function Appointments({ staff = false }) {
           <div className="pagination">
             <button
               className="button secondary small"
-              disabled={page === 0 || appointments.loading}
-              onClick={() => setPage((value) => value - 1)}
+              disabled={page === 0 || turnosLoading}
+              onClick={() => dispatch(cambiarPagina(page - 1))}
             >
               <ArrowLeft size={16} />
               Anterior
@@ -342,8 +360,8 @@ export default function Appointments({ staff = false }) {
             </span>
             <button
               className="button secondary small"
-              disabled={page + 1 >= data.totalPages || appointments.loading}
-              onClick={() => setPage((value) => value + 1)}
+              disabled={page + 1 >= data.totalPages || turnosLoading}
+              onClick={() => dispatch(cambiarPagina(page + 1))}
             >
               Siguiente
               <ArrowRight size={16} />
@@ -361,7 +379,7 @@ export default function Appointments({ staff = false }) {
       {extra && (
         <ExtraAppointment
           user={user}
-          doctors={doctors.data || []}
+          doctors={doctors}
           onClose={() => setExtra(false)}
           onSaved={() =>
             saved(

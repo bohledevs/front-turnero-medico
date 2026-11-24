@@ -1,34 +1,41 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { api } from "../services/api";
+import { useDispatch, useSelector } from "react-redux";
 import { STATUS, needsReason, formatDate, formatTime } from "../lib/domain";
 import Field from "./Field";
 import Modal from "./Modal";
 import { Alert } from "./Feedback";
+import {
+  cambiarEstadoTurno,
+  selectOperacionTurnosLoading,
+} from "../store/slices/turnosSlice";
 export default function AppointmentActions({
   appointment,
   target,
   onClose,
   onSaved,
 }) {
+  const dispatch = useDispatch();
   const [reason, setReason] = useState("");
   const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const busy = useSelector(selectOperacionTurnosLoading);
   const cancelling = target.startsWith("CANCELADO");
   async function submit(event) {
     event.preventDefault();
-    setBusy(true);
     setError(null);
     try {
-      await api.changeStatus(appointment.id, {
-        estadoDestino: target,
-        motivo: reason.trim() || null,
-      });
+      await dispatch(
+        cambiarEstadoTurno({
+          id: appointment.id,
+          datos: {
+            estadoDestino: target,
+            motivo: reason.trim() || null,
+          },
+        }),
+      ).unwrap();
       onSaved();
     } catch (failure) {
       setError(failure);
-    } finally {
-      setBusy(false);
     }
   }
   return (

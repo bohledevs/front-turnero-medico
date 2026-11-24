@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Link,
   useLocation,
@@ -6,6 +6,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,9 +16,7 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
-import { api } from "../services/api";
 import { useAuth } from "../context/auth";
-import useResource from "../hooks/useResource";
 import {
   addDays,
   formatDate,
@@ -35,9 +34,26 @@ import {
 } from "../components/Feedback";
 import Field from "../components/Field";
 import Modal from "../components/Modal";
+import {
+  listarDoctores,
+  selectDoctores,
+  selectDoctoresError,
+  selectDoctoresLoading,
+} from "../store/slices/doctoresSlice";
+import {
+  consultarDisponibilidad,
+  limpiarErrorReserva,
+  reservarTurno,
+  selectDisponibilidad,
+  selectDisponibilidadError,
+  selectDisponibilidadLoading,
+  selectReservaError,
+  selectReservaLoading,
+} from "../store/slices/turnosSlice";
 export default function ProfessionalDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -47,28 +63,37 @@ export default function ProfessionalDetail() {
       ? requestedDate
       : today();
   const [selected, setSelected] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const doctors = useResource(
-    useCallback((signal) => api.doctors({}, signal), []),
-  );
-  const slots = useResource(
-    useCallback(
-      (signal) => api.availability({ doctorId: id, fecha: date }, signal),
-      [id, date],
-    ),
-  );
-  const doctor = doctors.data?.find((item) => String(item.id) === id);
-  if (doctors.loading)
+  const doctors = useSelector(selectDoctores);
+  const doctorsLoading = useSelector(selectDoctoresLoading);
+  const doctorsError = useSelector(selectDoctoresError);
+  const slots = useSelector(selectDisponibilidad);
+  const slotsLoading = useSelector(selectDisponibilidadLoading);
+  const slotsError = useSelector(selectDisponibilidadError);
+  const reserveLoading = useSelector(selectReservaLoading);
+  const reserveError = useSelector(selectReservaError);
+
+  useEffect(() => {
+    dispatch(listarDoctores());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(consultarDisponibilidad({ doctorId: id, fecha: date }));
+  }, [date, dispatch, id]);
+
+  const doctor = doctors.find((item) => String(item.id) === id);
+  if (doctorsLoading)
     return (
       <div className="container page">
         <Loading />
       </div>
     );
-  if (doctors.error)
+  if (doctorsError)
     return (
       <div className="container page">
-        <ResourceError error={doctors.error} retry={doctors.reload} />
+        <ResourceError
+          error={doctorsError}
+          retry={() => dispatch(listarDoctores())}
+        />
       </div>
     );
   if (!doctor)
@@ -87,25 +112,22 @@ export default function ProfessionalDetail() {
       </div>
     );
   async function reserve() {
-    setBusy(true);
-    setError(null);
     try {
-      const appointment = await api.reserve({
-        doctor: { id: doctor.id },
-        fechaHoraInicio: selected.fechaHoraInicio,
-      });
+      const appointment = await dispatch(
+        reservarTurno({
+          doctor: { id: doctor.id },
+          fechaHoraInicio: selected.fechaHoraInicio,
+        }),
+      ).unwrap();
       navigate("/mis-turnos", {
         state: { booked: appointment.id },
         replace: true,
       });
     } catch (failure) {
-      setError(failure);
       if (failure.status === 409 || failure.status === 400) {
         setSelected(null);
-        slots.reload();
+        dispatch(consultarDisponibilidad({ doctorId: id, fecha: date }));
       }
-    } finally {
-      setBusy(false);
     }
   }
   return (
@@ -157,7 +179,7 @@ export default function ProfessionalDetail() {
               if (event.target.value) {
                 setParams({ fecha: event.target.value });
                 setSelected(null);
-                setError(null);
+                dispatch(limpiarErrorReserva());
               }
             }}
           />
@@ -170,7 +192,7 @@ export default function ProfessionalDetail() {
                   onClick={() => {
                     setParams({ fecha: value });
                     setSelected(null);
-                    setError(null);
+                    dispatch(limpiarErrorReserva());
                   }}
                   aria-pressed={date === value}
                 >
@@ -195,19 +217,24 @@ export default function ProfessionalDetail() {
               <Clock size={14} /> Horarios de atención
             </span>
           </div>
-          <Alert>{error?.message}</Alert>
-          {slots.loading ? (
+          <Alert>{reserveError?.message}</Alert>
+          {slotsLoading ? (
             <Loading label="Consultando horarios…" />
-          ) : slots.error ? (
-            <ResourceError error={slots.error} retry={slots.reload} />
-          ) : !slots.data?.length ? (
+          ) : slotsError ? (
+            <ResourceError
+              error={slotsError}
+              retry={() =>
+                dispatch(consultarDisponibilidad({ doctorId: id, fecha: date }))
+              }
+            />
+          ) : !slots.length ? (
             <EmptyState title="Sin horarios para esta fecha">
               Probá con otro día para encontrar tu próximo turno.
             </EmptyState>
           ) : (
             <>
               <div className="slots">
-                {slots.data.map((slot) => (
+                {slots.map((slot) => (
                   <button
                     key={slot.fechaHoraInicio}
                     className={
@@ -221,7 +248,7 @@ export default function ProfessionalDetail() {
                     }
                     onClick={() => {
                       setSelected(slot);
-                      setError(null);
+                      dispatch(limpiarErrorReserva());
                     }}
                   >
                     <Clock size={15} />
@@ -264,7 +291,7 @@ export default function ProfessionalDetail() {
       {selected && user?.rol === "PACIENTE" && (
         <Modal
           title="Confirmá tu turno"
-          busy={busy}
+          busy={reserveLoading}
           onClose={() => setSelected(null)}
         >
           <div className="booking-summary">
@@ -291,17 +318,21 @@ export default function ProfessionalDetail() {
           <p className="muted">
             La reserva quedará a nombre de {fullName(user)}.
           </p>
-          <Alert>{error?.message}</Alert>
+          <Alert>{reserveError?.message}</Alert>
           <div className="modal-actions">
             <button
               className="button secondary"
               onClick={() => setSelected(null)}
-              disabled={busy}
+              disabled={reserveLoading}
             >
               Volver
             </button>
-            <button className="button" onClick={reserve} disabled={busy}>
-              {busy ? "Reservando…" : "Confirmar reserva"}
+            <button
+              className="button"
+              onClick={reserve}
+              disabled={reserveLoading}
+            >
+              {reserveLoading ? "Reservando…" : "Confirmar reserva"}
               <Check size={17} />
             </button>
           </div>
