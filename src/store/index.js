@@ -1,18 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer from "./slices/favoritosSlice";
 import filtrosTurnosReducer from "./slices/filtrosTurnosSlice";
+import { getSession } from "../services/api";
+import {
+  descartarFavoritosCompartidos,
+  guardarFavoritos,
+  leerFavoritos,
+} from "./favoritosStorage";
 
-const STORAGE_KEY = "turnera.favoritos";
+descartarFavoritosCompartidos();
 
-// Recupera los favoritos guardados para que no se pierdan al recargar la página
-function cargarFavoritos() {
-  try {
-    const guardados = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    return Array.isArray(guardados) ? { favoritos: { items: guardados } } : undefined;
-  } catch {
-    return undefined;
-  }
-}
+// Al recargar la página arrancamos con los favoritos de quien tiene la sesión abierta.
+// Cuando cambia el usuario, AuthProvider carga los de la nueva cuenta.
+const usuarioInicial = getSession()?.id ?? null;
 
 // Store único: acá vive todo el estado global de la app.
 // Cada slice es una porción (favoritos y filtros de turnos ahora; usuario, etc. más adelante).
@@ -22,14 +22,17 @@ export const store = configureStore({
     favoritos: favoritosReducer,
     filtrosTurnos: filtrosTurnosReducer,
   },
-  preloadedState: cargarFavoritos(),
+  preloadedState: {
+    favoritos: { usuarioId: usuarioInicial, items: leerFavoritos(usuarioInicial) },
+  },
 });
 
-// Cada vez que cambia el store, guardamos los favoritos en el navegador
+// Cada vez que cambian los favoritos, los guardamos en el navegador bajo la clave de su dueño.
+// Los cambios de otros slices (por ejemplo, los filtros) no escriben nada.
+let favoritosGuardados = store.getState().favoritos;
 store.subscribe(() => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store.getState().favoritos.items));
-  } catch {
-    // si el navegador bloquea el almacenamiento, la app sigue funcionando
-  }
+  const favoritos = store.getState().favoritos;
+  if (favoritos === favoritosGuardados) return;
+  favoritosGuardados = favoritos;
+  guardarFavoritos(favoritos.usuarioId, favoritos.items);
 });
