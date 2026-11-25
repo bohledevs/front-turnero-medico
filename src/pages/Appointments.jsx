@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,6 +33,15 @@ import {
 } from "../components/Feedback";
 import AppointmentActions from "../components/AppointmentActions";
 import ExtraAppointment from "../components/ExtraAppointment";
+import {
+  cambiarEstado,
+  cambiarFecha,
+  cambiarPagina,
+  cambiarPeriodo,
+  cambiarProfesional,
+  limpiarFiltros,
+  selectFiltrosTurnos,
+} from "../store/slices/filtrosTurnosSlice";
 const actionLabels = {
   CONFIRMADO: "Confirmar",
   ATENDIDO: "Marcar atendido",
@@ -42,11 +52,11 @@ const actionLabels = {
 export default function Appointments({ staff = false }) {
   const { user } = useAuth();
   const location = useLocation();
-  const [period, setPeriod] = useState("upcoming");
-  const [date, setDate] = useState(staff ? today() : "");
-  const [status, setStatus] = useState("");
-  const [doctorId, setDoctorId] = useState("");
-  const [page, setPage] = useState(0);
+  // Los filtros viven en el store: se conservan al ir a otra pantalla y volver.
+  const dispatch = useDispatch();
+  const filtros = useSelector(selectFiltrosTurnos);
+  const { periodo: period, estado: status, doctorId, pagina: page } = filtros;
+  const date = filtros.fecha ?? (staff ? today() : "");
   const [action, setAction] = useState(null);
   const [extra, setExtra] = useState(false);
   const [message, setMessage] = useState(
@@ -83,10 +93,6 @@ export default function Appointments({ staff = false }) {
     ),
   );
   const data = appointments.data;
-  function changed(setter, value) {
-    setter(value);
-    setPage(0);
-  }
   function saved(text) {
     setAction(null);
     setExtra(false);
@@ -133,19 +139,13 @@ export default function Appointments({ staff = false }) {
         <div className="tabs" role="group" aria-label="Período">
           <button
             className={period === "upcoming" ? "active" : ""}
-            onClick={() => {
-              changed(setPeriod, "upcoming");
-              setDate("");
-            }}
+            onClick={() => dispatch(cambiarPeriodo("upcoming"))}
           >
             Próximos turnos
           </button>
           <button
             className={period === "all" ? "active" : ""}
-            onClick={() => {
-              changed(setPeriod, "all");
-              setDate("");
-            }}
+            onClick={() => dispatch(cambiarPeriodo("all"))}
           >
             Todos / historial
           </button>
@@ -157,20 +157,24 @@ export default function Appointments({ staff = false }) {
             <button
               className="icon-button"
               aria-label="Día anterior"
-              onClick={() => changed(setDate, addDays(date || today(), -1))}
+              onClick={() =>
+                dispatch(cambiarFecha(addDays(date || today(), -1)))
+              }
             >
               <ChevronLeft size={20} />
             </button>
             <button
               className="button secondary small"
-              onClick={() => changed(setDate, today())}
+              onClick={() => dispatch(cambiarFecha(today()))}
             >
               Hoy
             </button>
             <button
               className="icon-button"
               aria-label="Día siguiente"
-              onClick={() => changed(setDate, addDays(date || today(), 1))}
+              onClick={() =>
+                dispatch(cambiarFecha(addDays(date || today(), 1)))
+              }
             >
               <ChevronRight size={20} />
             </button>
@@ -180,13 +184,13 @@ export default function Appointments({ staff = false }) {
           label="Fecha"
           type="date"
           value={date}
-          onChange={(event) => changed(setDate, event.target.value)}
+          onChange={(event) => dispatch(cambiarFecha(event.target.value))}
         />
         <Field
           as="select"
           label="Estado"
           value={status}
-          onChange={(event) => changed(setStatus, event.target.value)}
+          onChange={(event) => dispatch(cambiarEstado(event.target.value))}
         >
           <option value="">Todos los estados</option>
           {Object.entries(STATUS).map(([key, label]) => (
@@ -200,7 +204,9 @@ export default function Appointments({ staff = false }) {
             as="select"
             label="Profesional"
             value={doctorId}
-            onChange={(event) => changed(setDoctorId, event.target.value)}
+            onChange={(event) =>
+              dispatch(cambiarProfesional(event.target.value))
+            }
           >
             <option value="">Todos los profesionales</option>
             {doctors.data?.map((doctor) => (
@@ -213,12 +219,7 @@ export default function Appointments({ staff = false }) {
         {(date || status || doctorId) && (
           <button
             className="text-button"
-            onClick={() => {
-              setDate("");
-              setStatus("");
-              setDoctorId("");
-              setPage(0);
-            }}
+            onClick={() => dispatch(limpiarFiltros())}
           >
             Limpiar filtros
           </button>
@@ -332,7 +333,7 @@ export default function Appointments({ staff = false }) {
             <button
               className="button secondary small"
               disabled={page === 0 || appointments.loading}
-              onClick={() => setPage((value) => value - 1)}
+              onClick={() => dispatch(cambiarPagina(page - 1))}
             >
               <ArrowLeft size={16} />
               Anterior
@@ -343,7 +344,7 @@ export default function Appointments({ staff = false }) {
             <button
               className="button secondary small"
               disabled={page + 1 >= data.totalPages || appointments.loading}
-              onClick={() => setPage((value) => value + 1)}
+              onClick={() => dispatch(cambiarPagina(page + 1))}
             >
               Siguiente
               <ArrowRight size={16} />

@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { AuthContext } from "./auth";
 import { api, getSession, saveSession } from "../services/api";
+import { reiniciarFiltrosTurnos } from "../store/slices/filtrosTurnosSlice";
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getSession);
   const [expired, setExpired] = useState(false);
+  const dispatch = useDispatch();
+  const userId = user?.id;
+  // Cuando cambia quién está logueado (ingreso, cierre o vencimiento de la sesión),
+  // los filtros de turnos vuelven a su valor inicial.
+  useEffect(() => {
+    dispatch(reiniciarFiltrosTurnos());
+  }, [dispatch, userId]);
   useEffect(() => {
     const expire = () => {
       saveSession(null);

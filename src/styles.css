@@ -979,6 +979,9 @@ select {
   grid-template-columns: repeat(2, 1fr);
   gap: 18px;
 }
+.favoritos-grupo + .favoritos-grupo {
+  margin-top: 36px;
+}
 .results-heading {
   display: flex;
   align-items: center;
