@@ -14,6 +14,7 @@ import {
   Check,
   Clock,
   ShieldCheck,
+  ShoppingCart,
 } from "lucide-react";
 import { api } from "../services/api";
 import { useAuth } from "../context/auth";
@@ -34,10 +35,21 @@ import {
   ResourceError,
 } from "../components/Feedback";
 import Field from "../components/Field";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  agregarItemCarrito,
+  cargarCarrito,
+  selectCarrito,
+  selectEstadoCarrito,
+  turnoEstaEnCarrito,
+} from "../store/slices/carritoSlice.js";
 import Modal from "../components/Modal";
 export default function ProfessionalDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const dispatch = useDispatch();
+  const carrito = useSelector(selectCarrito);
+  const carritoStatus = useSelector(selectEstadoCarrito);
   const location = useLocation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -59,6 +71,13 @@ export default function ProfessionalDetail() {
     ),
   );
   const doctor = doctors.data?.find((item) => String(item.id) === id);
+  
+const enCarrito = turnoEstaEnCarrito(
+  carrito,
+  doctor?.id,
+  selected?.fechaHoraInicio,
+);
+
   if (doctors.loading)
     return (
       <div className="container page">
@@ -108,6 +127,38 @@ export default function ProfessionalDetail() {
       setBusy(false);
     }
   }
+  
+async function agregarAlCarrito() {
+  if (!doctor || !selected || enCarrito) return;
+
+  setBusy(true);
+  setError(null);
+
+  try {
+    await dispatch(
+      agregarItemCarrito({
+        doctor: { id: doctor.id },
+        fechaHoraInicio: selected.fechaHoraInicio,
+      }),
+    ).unwrap();
+
+    // La API devuelve el carrito actualizado.
+    setSelected(null);
+    navigate("/carrito");
+
+  } catch (failure) {
+    setError(failure);
+
+    if (failure.status === 409) {
+      // Puede haberse ocupado el horario o estar duplicado.
+      dispatch(cargarCarrito());
+      slots.reload();
+    }
+  } finally {
+    setBusy(false);
+  }
+}
+
   return (
     <div className="container page">
       <Link className="back-link" to="/profesionales">
@@ -263,7 +314,7 @@ export default function ProfessionalDetail() {
       </div>
       {selected && user?.rol === "PACIENTE" && (
         <Modal
-          title="Confirmá tu turno"
+          title= "Guardar o reservar turno"
           busy={busy}
           onClose={() => setSelected(null)}
         >
@@ -289,9 +340,24 @@ export default function ProfessionalDetail() {
             </p>
           </div>
           <p className="muted">
-            La reserva quedará a nombre de {fullName(user)}.
-          </p>
+  Si confirmás la reserva, quedará a nombre de {fullName(user)}.
+</p>
           <Alert>{error?.message}</Alert>
+          
+{enCarrito && (
+  <Alert>
+    Este horario ya está agregado a tu carrito.
+    Podés verlo desde la sección Mi carrito.
+  </Alert>
+)}
+
+{carritoStatus === "failed" && (
+  <Alert>
+    No pudimos consultar tu carrito.
+    Ingresá a Mi carrito para volver a intentarlo.
+  </Alert>
+)}
+
           <div className="modal-actions">
             <button
               className="button secondary"
@@ -300,6 +366,21 @@ export default function ProfessionalDetail() {
             >
               Volver
             </button>
+            
+<button
+  type="button"
+  className="button secondary"
+  onClick={agregarAlCarrito}
+  disabled={
+    busy ||
+    enCarrito ||
+    carritoStatus !== "succeeded"
+  }
+>
+  <ShoppingCart size={17} />
+  {enCarrito ? "Ya está en el carrito" : "Agregar al carrito"}
+</button>
+
             <button className="button" onClick={reserve} disabled={busy}>
               {busy ? "Reservando…" : "Confirmar reserva"}
               <Check size={17} />

@@ -13,15 +13,22 @@ import {
   LogOut,
   Menu,
   X,
+  ShoppingCart,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../context/auth";
 import { selectCantidadFavoritos } from "../store/slices/favoritosSlice";
 import { ROLES, initials } from "../lib/domain";
+import {cargarCarrito,limpiarCarrito,selectCantidadCarrito,} from "../store/slices/carritoSlice.js";
 import { getDataMode, resetDemo, setDataMode } from "../services/api";
 export default function Layout() {
   const { user, logout } = useAuth();
   // La barra se suscribe SOLO a la cantidad de favoritos (un número)
+  
+  const dispatch = useDispatch();
+
+  const cantidadCarrito = useSelector(selectCantidadCarrito);
+
   const cantidadFavoritos = useSelector(selectCantidadFavoritos);
   const [menu, setMenu] = useState(false);
   const [dataMode, setMode] = useState(getDataMode);
@@ -31,6 +38,22 @@ export default function Layout() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+  
+useEffect(() => {
+  // Limpiar los datos del paciente anterior.
+  dispatch(limpiarCarrito());
+
+  if (user?.rol !== "PACIENTE") {
+    return;
+  }
+
+  // Cargar el carrito del paciente autenticado.
+  const operation = dispatch(cargarCarrito());
+
+  // Evitar respuestas desactualizadas.
+  return () => operation.abort();
+}, [dispatch, user?.id, user?.rol, dataMode]);
+
   const close = () => setMenu(false);
   return (
     <div className="site">
@@ -74,6 +97,20 @@ export default function Layout() {
                 Mis turnos
               </NavLink>
             )}
+            
+{user?.rol === "PACIENTE" && (
+  <NavLink to="/carrito" onClick={close}>
+    <ShoppingCart size={16} />
+    Mi carrito
+
+    {cantidadCarrito > 0 && (
+      <span className="nav-badge">
+        {cantidadCarrito}
+      </span>
+    )}
+  </NavLink>
+)}
+
             {["MEDICO", "ADMIN"].includes(user?.rol) && (
               <NavLink to="/agenda" onClick={close}>
                 Agenda
