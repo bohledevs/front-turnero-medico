@@ -14,6 +14,7 @@ import { Login, Register } from "./pages/AuthPages";
 import Professionals from "./pages/Professionals";
 import ProfessionalDetail from "./pages/ProfessionalDetail";
 import Appointments from "./pages/Appointments";
+import Cart from "./pages/Cart.jsx";
 import Administration from "./pages/Administration";
 import Favorites from "./pages/Favorites";
 function ProtectedRoute({ roles }) {
@@ -54,9 +55,12 @@ export default function App() {
         <Route path="favoritos" element={<Favorites />} />
         <Route path="ingresar" element={<Login />} />
         <Route path="registro" element={<Register />} />
+        
         <Route element={<ProtectedRoute roles={["PACIENTE"]} />}>
-          <Route path="mis-turnos" element={<Appointments />} />
+        <Route path="mis-turnos" element={<Appointments />} />
+        <Route path="carrito" element={<Cart />} />
         </Route>
+
         <Route element={<ProtectedRoute roles={["MEDICO", "ADMIN"]} />}>
           <Route path="agenda" element={<Appointments staff />} />
         </Route>
