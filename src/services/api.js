@@ -185,8 +185,18 @@ export const api = {
     request("/auth/register", { method: "POST", body, authenticated: false }),
   doctors: (filters, signal) =>
     request("/doctores?" + query(filters), { signal, authenticated: false }),
+  
+  doctorById: (id, signal) =>
+  request(`/doctores/${id}`, {signal,authenticated: false,}),
+
   specialties: (signal) =>
     request("/especialidades", { signal, authenticated: false }),
+
+  
+  specialtyById: (id, signal) =>
+  request(`/especialidades/${id}`, {signal,authenticated: false,}),
+
+  
   availability: (filters, signal) =>
     request("/turnos/disponibles?" + query(filters), {
       signal,
@@ -194,6 +204,10 @@ export const api = {
     }),
   appointments: (filters, signal) =>
     request("/turnos?" + query(filters), { signal }),
+  
+  appointmentById: (id, signal) =>
+    request(`/turnos/${id}`, {signal,}),
+
   reserve: (body) => request("/turnos/reservar", { method: "POST", body }),
   changeStatus: (id, body) =>
     request("/turnos/" + id + "/estado", { method: "PATCH", body }),

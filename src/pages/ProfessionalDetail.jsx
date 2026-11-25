@@ -50,26 +50,32 @@ export default function ProfessionalDetail() {
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const doctors = useResource(
-    useCallback((signal) => api.doctors({}, signal), []),
-  );
+  
+  const doctorResource = useResource(
+    useCallback(
+      (signal) => api.doctorById(id, signal),
+      [id],),);
+
   const slots = useResource(
     useCallback(
       (signal) => api.availability({ doctorId: id, fecha: date }, signal),
       [id, date],
     ),
   );
-  const doctor = doctors.data?.find((item) => String(item.id) === id);
-  if (doctors.loading)
+  const doctor = doctorResource.data;
+  if (doctorResource.loading)
     return (
       <div className="container page">
         <Loading />
       </div>
     );
-  if (doctors.error)
+  if (doctorResource.error)
     return (
       <div className="container page">
-        <ResourceError error={doctors.error} retry={doctors.reload} />
+        <ResourceError
+  error={doctorResource.error}
+  retry={doctorResource.reload}
+/>
       </div>
     );
   if (!doctor)

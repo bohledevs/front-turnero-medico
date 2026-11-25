@@ -263,6 +263,23 @@ export async function staticRequest(
     });
     return patient;
   }
+
+  
+if (method === "GET" && /^\/doctores\/\d+$/.test(route)) {
+  const id = Number(route.split("/")[2]);
+
+  const doctor = data.doctors.find(
+    (item) => item.id === id,
+  );
+
+  if (!doctor) {
+    fail(`Médico con id ${id} no encontrado`, 404);
+  }
+
+  return doctor;
+}
+
+  
   if (route === "/doctores" && method === "GET") {
     return data.doctors.filter(
       (doctor) =>
@@ -274,9 +291,62 @@ export async function staticRequest(
             .includes(params.get("nombre").toLowerCase())),
     );
   }
+
+  
+if (method === "GET" && /^\/especialidades\/\d+$/.test(route)) {
+  const id = Number(route.split("/")[2]);
+
+  const especialidad = data.specialties.find(
+    (item) => item.id === id,
+  );
+
+  if (!especialidad) {
+    fail(`Especialidad con id ${id} no encontrada`, 404);
+  }
+
+  return especialidad;
+}
+
+  
   if (route === "/especialidades" && method === "GET") {
     return data.specialties;
   }
+
+
+  
+if (method === "GET" && /^\/turnos\/\d+$/.test(route)) {
+  const user = profile(data, session);
+
+  requireRole(user, "PACIENTE", "MEDICO", "ADMIN");
+
+  const id = Number(route.split("/")[2]);
+
+  const turno = data.appointments.content.find(
+    (item) => item.id === id,
+  );
+
+  if (!turno) {
+    fail(`Turno con id ${id} no encontrado`, 404);
+  }
+
+  if (
+    user.rol === "PACIENTE" &&
+    turno.paciente?.id !== user.id
+  ) {
+    fail("No tiene permisos para esta operación", 403);
+  }
+
+  if (
+    user.rol === "MEDICO" &&
+    turno.doctor?.id !== user.id
+  ) {
+    fail("No tiene permisos para esta operación", 403);
+  }
+
+  return turno;
+}
+
+  
   if (route === "/turnos/disponibles" && method === "GET") {
     const doctorId = Number(params.get("doctorId"));
     const date = params.get("fecha");
