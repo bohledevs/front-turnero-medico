@@ -25,8 +25,24 @@ function CreateForm({ type, specialties, onClose, onSaved }) {
         setError({ message: issue, fieldErrors: { password: issue } });
         return;
       }
+      const fotoUrl = values.fotoUrl?.trim();
+      
+      if (fotoUrl && !/^https:\/\/[^ ]+$/i.test(fotoUrl)) {
+        setError({
+          message: "Ingresá una URL HTTPS válida para la fotografía.",
+          fieldErrors: {
+            fotoUrl: "La URL debe comenzar con https://",
+          },
+        });
+        return;
+      }
+
       values.especialidadId = Number(values.especialidadId);
       values.telefono = values.telefono || null;
+      
+      // Campos adicionales del perfil profesional.
+      values.fotoUrl = values.fotoUrl?.trim() || null;
+      values.descripcion = values.descripcion?.trim() || null;
     }
     setBusy(true);
     setError(null);
@@ -121,6 +137,28 @@ function CreateForm({ type, specialties, onClose, onSaved }) {
                   </option>
                 ))}
               </Field>
+              
+              <Field
+                label="URL de la fotografía (opcional)"
+                name="fotoUrl"
+                type="url"
+                placeholder="https://ejemplo.com/foto.jpg"
+                maxLength={500}
+                hint="Ingresá una URL HTTPS de una imagen."
+                error={errorFor("fotoUrl")}
+                />
+
+            <Field
+              as="textarea"
+              label="Descripción profesional (opcional)"
+              name="descripcion"
+              rows={4}
+              maxLength={1000}
+              placeholder="Experiencia, formación y áreas de atención..."
+              hint="Describí brevemente la trayectoria del profesional."
+              error={errorFor("descripcion")}
+              />
+
             </>
           ) : (
             <Field

@@ -5,7 +5,9 @@
     "apellido": "Fernández",
     "matriculaNacional": "MN-45821",
     "especialidadId": 1,
-    "especialidadNombre": "Clínica médica"
+    "especialidadNombre": "Clínica médica",
+    "fotoUrl": "/images/doctores/lucia-fernandez.jpg",
+    "descripcion": "Profesional de demostración del área de clínica médica. Brinda atención general y orientación para el cuidado de la salud."
   },
   {
     "id": 11,
@@ -13,7 +15,9 @@
     "apellido": "Ríos",
     "matriculaNacional": "MN-61234",
     "especialidadId": 2,
-    "especialidadNombre": "Cardiología"
+    "especialidadNombre": "Cardiología",
+    "fotoUrl": "/images/doctores/mateo-rios.jpg",
+    "descripcion": "Profesional ficticio de cardiología. Su perfil de demostración está orientado al cuidado y seguimiento de la salud cardiovascular."
   },
   {
     "id": 12,
@@ -21,6 +25,8 @@
     "apellido": "Suárez",
     "matriculaNacional": "MN-73890",
     "especialidadId": 3,
-    "especialidadNombre": "Dermatología"
+    "especialidadNombre": "Dermatología",
+    "fotoUrl": "/images/doctores/elena-suarez.jpg",
+    "descripcion": "Profesional de demostración de dermatología, con atención orientada a consultas generales sobre la piel."
   }
 ]
