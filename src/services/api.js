@@ -126,6 +126,21 @@ export const api = {
     }),
   appointments: (filters, signal) =>
     request("/turnos?" + query(filters), { signal }),
+  
+  // Obtener los carritos visibles para el usuario.
+  carritos: (signal) =>
+    request("/carrito", { signal }),
+
+  // Agregar un turno al carrito del paciente.
+  agregarItemCarrito: (body) =>
+    request("/carrito/items", {method: "POST",body,}),
+
+  // Eliminar un ítem concreto del carrito.
+  quitarItemCarrito: (itemId) =>
+    request(`/carrito/items/${itemId}`, {
+      method: "DELETE",
+    }),
+
   reserve: (body) => request("/turnos/reservar", { method: "POST", body }),
   changeStatus: (id, body) =>
     request("/turnos/" + id + "/estado", { method: "PATCH", body }),
