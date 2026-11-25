@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer from "./slices/favoritosSlice";
+import carritoReducer from "./slices/carritoSlice.js";
 
 const STORAGE_KEY = "turnera.favoritos";
 
@@ -15,12 +16,15 @@ function cargarFavoritos() {
 
 // Store único: acá vive todo el estado global de la app.
 // Cada slice es una porción (favoritos ahora; usuario, turnos, etc. más adelante).
+
 export const store = configureStore({
   reducer: {
     favoritos: favoritosReducer,
+    carrito: carritoReducer,
   },
   preloadedState: cargarFavoritos(),
 });
+
 
 // Cada vez que cambia el store, guardamos los favoritos en el navegador
 store.subscribe(() => {
