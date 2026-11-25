@@ -97,6 +97,10 @@ async function loadState() {
           }),
         );
         data.schedules = {};
+        
+        // Carritos temporales del modo de demostración.
+        data.carritos = [];
+
         data.nextIds = {
           doctor: Math.max(...data.doctors.map(({ id }) => id)) + 1,
           specialty: Math.max(...data.specialties.map(({ id }) => id)) + 1,
@@ -104,6 +108,8 @@ async function loadState() {
             Math.max(...data.appointments.content.map(({ id }) => id)) + 1,
           patient: Math.max(...data.patients.map(({ id }) => id)) + 1,
           schedule: 1,
+          carrito: 1,
+          itemCarrito: 1,
         };
         return data;
       })
@@ -263,6 +269,141 @@ export async function staticRequest(
     });
     return patient;
   }
+  
+// ===== CARRITO DE TURNOS: MODO ESTÁTICO =====
+
+// GET /api/carrito
+if (route === "/carrito" && method === "GET") {
+  const user = profile(data, session);
+  requireRole(user, "PACIENTE");
+
+  return data.carritos
+    .filter((cart) => cart.paciente.id === user.id)
+    .map((cart) => ({
+      ...cart,
+      items: [...cart.items],
+    }));
+}
+
+// POST /api/carrito/items
+if (route === "/carrito/items" && method === "POST") {
+  const user = profile(data, session);
+  requireRole(user, "PACIENTE");
+
+  const doctorId = Number(body?.doctor?.id);
+  const fechaHoraInicio = body?.fechaHoraInicio;
+
+  if (!Number.isInteger(doctorId) || doctorId <= 0 ||
+      typeof fechaHoraInicio !== "string") {
+    fail("Indicá un profesional y horario válidos.", 400);
+  }
+
+  const doctor = data.doctors.find(
+    (item) => item.id === doctorId,
+  );
+
+  if (!doctor) {
+    fail("No encontramos al profesional indicado.", 404);
+  }
+
+  if (fechaHoraInicio <= argentinaDateTime()) {
+    fail("El horario debe ser futuro.", 400);
+  }
+
+  let carrito = data.carritos.find(
+    (item) => item.paciente.id === user.id,
+  );
+
+  // No admitir el mismo turno dos veces.
+  if (
+    carrito?.items.some(
+      (item) =>
+        item.doctor.id === doctorId &&
+        item.fechaHoraInicio === fechaHoraInicio,
+    )
+  ) {
+    fail("Este horario ya está en tu carrito.", 409);
+  }
+
+  // Reutilizar la disponibilidad simulada existente.
+  const disponibles = await staticRequest(
+    "/turnos/disponibles?" +
+      new URLSearchParams({
+        doctorId: String(doctorId),
+        fecha: fechaHoraInicio.slice(0, 10),
+      }),
+    { signal },
+  );
+
+  const horario = disponibles.find(
+    (slot) => slot.fechaHoraInicio === fechaHoraInicio,
+  );
+
+  if (!horario) {
+    fail("El horario ya no está disponible.", 409);
+  }
+
+  // Crear el carrito solo al agregar el primer turno.
+  if (!carrito) {
+    carrito = {
+      id: data.nextIds.carrito++,
+      paciente: { id: user.id },
+      items: [],
+    };
+
+    data.carritos.push(carrito);
+  }
+
+  carrito.items.push({
+    id: data.nextIds.itemCarrito++,
+    doctor: { id: doctorId },
+    fechaHoraInicio,
+    fechaHoraFin: horario.fechaHoraFin,
+  });
+
+  carrito.items.sort((a, b) =>
+    a.fechaHoraInicio.localeCompare(b.fechaHoraInicio),
+  );
+
+  return {
+    ...carrito,
+    items: [...carrito.items],
+  };
+}
+
+// DELETE /api/carrito/items/{itemId}
+const carritoItemMatch = route.match(
+  /^\/carrito\/items\/(\d+)$/,
+);
+
+if (carritoItemMatch && method === "DELETE") {
+  const user = profile(data, session);
+  requireRole(user, "PACIENTE");
+
+  const itemId = Number(carritoItemMatch[1]);
+
+  const carrito = data.carritos.find((cart) =>
+    cart.items.some((item) => item.id === itemId),
+  );
+
+  if (!carrito) {
+    fail("No encontramos ese turno en el carrito.", 404);
+  }
+
+  if (carrito.paciente.id !== user.id) {
+    fail("No tenés permiso para modificar este carrito.", 403);
+  }
+
+  carrito.items = carrito.items.filter(
+    (item) => item.id !== itemId,
+  );
+
+  return {
+    ...carrito,
+    items: [...carrito.items],
+  };
+}
+
   if (route === "/doctores" && method === "GET") {
     return data.doctors.filter(
       (doctor) =>
