@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer from "./slices/favoritosSlice";
 import filtrosTurnosReducer from "./slices/filtrosTurnosSlice";
+import authReducer from "./slices/authSlice";
 
 const STORAGE_KEY = "turnera.favoritos";
 
@@ -15,10 +16,12 @@ function cargarFavoritos() {
 }
 
 // Store único: acá vive todo el estado global de la app.
-// Cada slice es una porción (favoritos y filtros de turnos ahora; usuario, etc. más adelante).
+// Cada slice es una porción (sesión, favoritos y filtros de turnos).
 // Los filtros de turnos no se guardan en el navegador: duran mientras la pestaña esté abierta.
+// La sesión tampoco: al recargar se recupera desde la cookie HttpOnly con restaurarSesion.
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     favoritos: favoritosReducer,
     filtrosTurnos: filtrosTurnosReducer,
   },
