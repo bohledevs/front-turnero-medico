@@ -16,18 +16,19 @@ export function AuthProvider({ children }) {
   const dispatch = useDispatch();
   const usuario = useSelector(selectUsuario);
   const estado = useSelector(selectEstadoSesion);
-  const userId = usuario?.id;
   const expiresAt = usuario?.expiresAt;
+
+  // Cuenta actual: rol + id, porque un paciente y un médico pueden tener el mismo id.
+  const duenio = duenioFavoritos(usuario);
 
   // Cuando cambia quién está logueado (ingreso, cierre o vencimiento de la sesión),
   // los filtros de turnos vuelven a su valor inicial.
   useEffect(() => {
     dispatch(reiniciarFiltrosTurnos());
-  }, [dispatch, userId]);
+  }, [dispatch, duenio]);
 
   // Y se cargan los favoritos de esa cuenta. Mientras se recupera la sesión después de un F5
   // todavía no se sabe de quién son, así que se espera en lugar de mostrar los de invitado.
-  const duenio = duenioFavoritos(usuario);
   useEffect(() => {
     if (estado === "verificando") return;
     dispatch(cambiarUsuarioFavoritos({ duenio, items: leerFavoritos(duenio) }));
