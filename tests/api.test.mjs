@@ -67,17 +67,12 @@ function mockError(config, status, data) {
  * Comprueba:
  * - Base URL de Axios.
  * - Identidad de la reserva.
- * - Envío del token Bearer.
- * - Rutas públicas sin autorización.
+ * - La sesión viaja en la cookie: nunca se manda un header Bearer.
+ * - Configuración del token CSRF (cookie XSRF-TOKEN -> header X-XSRF-TOKEN).
  * - Generación de parámetros de búsqueda.
  */
-test("identidad de reserva, Bearer y rutas públicas", async () => {
+test("identidad de reserva, sesión por cookie y token CSRF", async () => {
   const originalAdapter = axiosClient.defaults.adapter;
-
-  saveSession({
-    token: "test-token",
-    expiresAt: Date.now() + 60000,
-  });
 
   let sent;
 
@@ -96,17 +91,16 @@ test("identidad de reserva, Bearer y rutas públicas", async () => {
     assert.equal(sent.url, "/turnos/reservar");
     assert.equal(sent.method, "post");
 
-    assert.equal(
-      sent.headers.get("Authorization"),
-      "Bearer test-token",
-    );
+    assert.equal(sent.headers.get("Authorization"), undefined);
+    assert.equal(sent.withCredentials, true);
+    assert.equal(sent.xsrfCookieName, "XSRF-TOKEN");
+    assert.equal(sent.xsrfHeaderName, "X-XSRF-TOKEN");
 
     assert.deepEqual(JSON.parse(sent.data), {
       doctor: { id: 9 },
       fechaHoraInicio: "2030-01-01T09:00:00",
     });
 
-    // Las rutas públicas no deben enviar Bearer.
     await api.specialties();
 
     assert.equal(sent.url, "/especialidades");
@@ -133,7 +127,7 @@ test("identidad de reserva, Bearer y rutas públicas", async () => {
 /*
  * TEST 2
  * Comprueba:
- * - HTTP 401 cierra la sesión.
+ * - HTTP 401 avisa que la sesión venció.
  * - Se notifica la sesión vencida.
  * - Los errores 400 conservan fieldErrors.
  * - El login público no dispara sesión vencida.
@@ -141,11 +135,6 @@ test("identidad de reserva, Bearer y rutas públicas", async () => {
  */
 test("401 limpia sesión, validaciones preservan errores y abort no se oculta", async () => {
   const originalAdapter = axiosClient.defaults.adapter;
-
-  saveSession({
-    token: "expired",
-    expiresAt: Date.now() + 60000,
-  });
 
   let expired = false;
 
@@ -169,7 +158,6 @@ test("401 limpia sesión, validaciones preservan errores y abort no se oculta", 
       (error) => error.status === 401,
     );
 
-    assert.equal(getSession(), null);
     assert.equal(expired, true);
 
     // Simular error de validación HTTP 400.
@@ -188,12 +176,7 @@ test("401 limpia sesión, validaciones preservan errores y abort no se oculta", 
         error.fieldErrors.dni === "DNI inválido",
     );
 
-    // Un 401 de login no debe cerrar otra sesión.
-    saveSession({
-      token: "existing-token",
-      expiresAt: Date.now() + 60000,
-    });
-
+    // Un 401 de login o de /auth/me no debe avisar que una sesión venció.
     let loginExpired = false;
 
     const listener = () => {
@@ -216,11 +199,9 @@ test("401 limpia sesión, validaciones preservan errores y abort no se oculta", 
         (error) => error.status === 401,
       );
 
+      await assert.rejects(api.me(), (error) => error.status === 401);
+
       assert.equal(loginExpired, false);
-      assert.equal(
-        getSession()?.token,
-        "existing-token",
-      );
     } finally {
       window.removeEventListener(
         "turnera:expired",
@@ -287,5 +268,40 @@ test("la fuente de datos elegida se persiste y cierra la sesión", () => {
     assert.equal(getDataMode(), "api");
   } finally {
     delete globalThis.localStorage;
+  }
+});
+
+/*
+ * TEST 4
+ * Comprueba:
+ * - El login devuelve los datos del usuario sin el token.
+ * - Con el backend real no se guarda nada de la sesión en el navegador.
+ */
+test("el login no expone ni guarda el token con el backend real", async () => {
+  const originalAdapter = axiosClient.defaults.adapter;
+  store.clear();
+
+  axiosClient.defaults.adapter = async (config) =>
+    mockResponse(config, {
+      id: 7,
+      nombre: "Ana",
+      apellido: "Paciente",
+      email: "ana@turnera.test",
+      rol: "PACIENTE",
+      token: "jwt-que-no-debe-quedar-en-el-navegador",
+      tokenType: "Bearer",
+      expiresIn: 3600,
+    });
+
+  try {
+    const usuario = await api.login({ email: "ana@turnera.test", password: "x" });
+
+    assert.equal(usuario.id, 7);
+    assert.equal(usuario.token, undefined);
+    assert.equal(usuario.tokenType, undefined);
+    assert.equal(getSession(), null);
+    assert.equal(store.size, 0);
+  } finally {
+    axiosClient.defaults.adapter = originalAdapter;
   }
 });
