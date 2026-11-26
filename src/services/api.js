@@ -90,10 +90,10 @@ axiosClient.interceptors.request.use((config) => {
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      error.config?.authenticated !== false
-    ) {
+    // notifyExpired: false para pedidos donde un 401 no significa que la sesión venció (login, /auth/me).
+    const notifyExpired =
+      error.config?.notifyExpired ?? error.config?.authenticated !== false;
+    if (error.response?.status === 401 && notifyExpired) {
       saveSession(null);
 
       if (typeof window !== "undefined") {
@@ -116,7 +116,13 @@ export function query(values = {}) {
 
 export async function request(
   path,
-  { method = "GET", body, signal, authenticated = true } = {},
+  {
+    method = "GET",
+    body,
+    signal,
+    authenticated = true,
+    notifyExpired = authenticated,
+  } = {},
 ) {
   const session = authenticated ? getSession() : null;
 
@@ -129,7 +135,7 @@ export async function request(
         session,
       });
     } catch (error) {
-      if (error.status === 401 && authenticated) {
+      if (error.status === 401 && notifyExpired) {
         saveSession(null);
         window.dispatchEvent(new Event("turnera:expired"));
       }
@@ -146,6 +152,7 @@ export async function request(
       data: body,
       signal,
       authenticated,
+      notifyExpired,
     });
 
     return response.data;
@@ -183,6 +190,10 @@ export const api = {
     request("/auth/login", { method: "POST", body, authenticated: false }),
   register: (body) =>
     request("/auth/register", { method: "POST", body, authenticated: false }),
+  // Sesión actual sin el token; un 401 acá significa "no hay sesión", no "venció".
+  me: (signal) => request("/auth/me", { signal, notifyExpired: false }),
+  logout: () =>
+    request("/auth/logout", { method: "POST", notifyExpired: false }),
   doctors: (filters, signal) =>
     request("/doctores?" + query(filters), { signal, authenticated: false }),
   

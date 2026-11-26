@@ -221,6 +221,16 @@ export async function staticRequest(
     if (!account) fail("Email o contraseña incorrectos.", 401);
     return { ...account.response };
   }
+  // Equivalentes de GET /api/auth/me y POST /api/auth/logout del backend.
+  if (route === "/auth/me" && method === "GET") {
+    // eslint-disable-next-line no-unused-vars
+    const { token, tokenType, ...usuario } = profile(data, session);
+    const restantes = Math.round((session.expiresAt - Date.now()) / 1000);
+    return { ...usuario, expiresIn: Math.max(0, restantes) };
+  }
+  if (route === "/auth/logout" && method === "POST") {
+    return null;
+  }
   if (route === "/auth/register" && method === "POST") {
     validatePatient(body);
     if (
