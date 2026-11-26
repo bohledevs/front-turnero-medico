@@ -1,55 +1,47 @@
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { AuthContext } from "./auth";
-import { api, getSession, saveSession } from "../services/api";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { reiniciarFiltrosTurnos } from "../store/slices/filtrosTurnosSlice";
+import {
+  cerrarSesion,
+  selectUsuario,
+  sesionVencida,
+} from "../store/slices/authSlice";
+
+// Efectos de la sesión que no son de ninguna pantalla en particular.
+// El estado está en el authSlice; la sesión se restaura al arrancar (main.jsx).
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getSession);
-  const [expired, setExpired] = useState(false);
   const dispatch = useDispatch();
-  const userId = user?.id;
+  const usuario = useSelector(selectUsuario);
+  const userId = usuario?.id;
+  const expiresAt = usuario?.expiresAt;
+
   // Cuando cambia quién está logueado (ingreso, cierre o vencimiento de la sesión),
   // los filtros de turnos vuelven a su valor inicial.
   useEffect(() => {
     dispatch(reiniciarFiltrosTurnos());
   }, [dispatch, userId]);
+
+  // La capa de API avisa con eventos: 401 en una ruta protegida o cambio de fuente de datos.
   useEffect(() => {
-    const expire = () => {
-      saveSession(null);
-      setUser(null);
-      setExpired(true);
-    };
-    const logout = () => {
-      saveSession(null);
-      setUser(null);
-    };
+    const expire = () => dispatch(sesionVencida());
+    const logout = () => dispatch(cerrarSesion());
     window.addEventListener("turnera:expired", expire);
     window.addEventListener("turnera:logout", logout);
-    const timer = user
-      ? setTimeout(expire, Math.max(0, user.expiresAt - Date.now()))
-      : null;
     return () => {
       window.removeEventListener("turnera:expired", expire);
       window.removeEventListener("turnera:logout", logout);
-      clearTimeout(timer);
     };
-  }, [user]);
-  async function login(values) {
-    const data = await api.login(values);
-    const session = { ...data, expiresAt: Date.now() + data.expiresIn * 1000 };
-    saveSession(session);
-    setUser(session);
-    setExpired(false);
-    return session;
-  }
-  function logout() {
-    saveSession(null);
-    setUser(null);
-    setExpired(false);
-  }
-  return (
-    <AuthContext.Provider value={{ user, login, logout, expired }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  }, [dispatch]);
+
+  // Cuando se cumple el vencimiento del JWT, se avisa sin esperar al próximo pedido.
+  useEffect(() => {
+    if (!expiresAt) return undefined;
+    const timer = setTimeout(
+      () => dispatch(sesionVencida()),
+      Math.max(0, expiresAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [dispatch, expiresAt]);
+
+  return children;
 }

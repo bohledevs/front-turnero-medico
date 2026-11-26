@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "./context/auth";
 import Layout from "./components/Layout";
-import { EmptyState } from "./components/Feedback";
+import { EmptyState, Loading } from "./components/Feedback";
 import Home from "./pages/Home";
 import { Login, Register } from "./pages/AuthPages";
 import Professionals from "./pages/Professionals";
@@ -17,8 +17,16 @@ import Appointments from "./pages/Appointments";
 import Administration from "./pages/Administration";
 import Favorites from "./pages/Favorites";
 function ProtectedRoute({ roles }) {
-  const { user } = useAuth();
+  const { user, estado } = useAuth();
   const location = useLocation();
+  // Mientras se recupera la sesión después de un F5, todavía no sabemos si hay usuario:
+  // esperar en lugar de mandar al login.
+  if (estado === "verificando")
+    return (
+      <div className="container page">
+        <Loading label="Recuperando tu sesión…" />
+      </div>
+    );
   if (!user)
     return (
       <Navigate

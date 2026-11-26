@@ -1,6 +1,8 @@
 import axios from "axios";
 import { resetStaticState, staticRequest } from "./staticApi.js";
 
+// Solo el modo demo guarda su sesión simulada en el navegador. Con el backend real el JWT viaja en
+// una cookie HttpOnly que el JavaScript no puede leer (ver docs/persistencia-sesion.md).
 const SESSION_KEY = "turnera.session";
 const DATA_MODE_KEY = "turnera.dataMode";
 const DEFAULT_DATA_MODE =
@@ -21,12 +23,19 @@ export function getDataMode() {
 }
 export function setDataMode(mode) {
   if (mode !== "static" && mode !== "api") return;
+  const anterior = getDataMode();
   try {
     localStorage.setItem(DATA_MODE_KEY, mode);
   } catch {
     // Si no se puede persistir, el cambio no sobrevive a una recarga.
   }
-  // Una sesión de una fuente no sirve en la otra.
+  // Una sesión de una fuente no sirve en la otra. Si se deja el backend real, se le pide que
+  // borre la cookie de sesión.
+  if (anterior === "api" && mode !== "api") {
+    axiosClient
+      .post("/auth/logout", null, { notifyExpired: false })
+      .catch(() => {});
+  }
   saveSession(null);
   window.dispatchEvent(new Event("turnera:logout"));
 }
@@ -34,6 +43,7 @@ export function resetDemo() {
   resetStaticState();
 }
 
+// Sesión simulada del modo demo: { token, expiresAt }.
 export function getSession() {
   try {
     const session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
@@ -64,38 +74,21 @@ export const axiosClient = axios.create({
   headers: {
     Accept: "application/json",
   },
-});
-
-/**
- * Interceptor de solicitudes.
- * Agrega automáticamente el token JWT cuando
- * la operación necesita autenticación.
- */
-axiosClient.interceptors.request.use((config) => {
-  const authenticated = config.authenticated !== false;
-  const session = authenticated ? getSession() : null;
-
-  if (session?.token) {
-    config.headers.set(
-      "Authorization",
-      `Bearer ${session.token}`,
-    );
-  } else {
-    config.headers.delete("Authorization");
-  }
-
-  return config;
+  // La sesión viaja sola en la cookie HttpOnly "turnera_sesion" (mismo origen gracias al proxy /api).
+  // Para los pedidos que modifican datos, Axios copia la cookie XSRF-TOKEN en el header X-XSRF-TOKEN:
+  // otro sitio no puede leer esa cookie, así que no puede falsificar el pedido (CSRF).
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
 });
 
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      error.config?.authenticated !== false
-    ) {
-      saveSession(null);
-
+    // notifyExpired: false para pedidos donde un 401 no significa que la sesión venció (login, /auth/me).
+    const notifyExpired =
+      error.config?.notifyExpired ?? error.config?.authenticated !== false;
+    if (error.response?.status === 401 && notifyExpired) {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("turnera:expired"));
       }
@@ -116,11 +109,16 @@ export function query(values = {}) {
 
 export async function request(
   path,
-  { method = "GET", body, signal, authenticated = true } = {},
+  {
+    method = "GET",
+    body,
+    signal,
+    authenticated = true,
+    notifyExpired = authenticated,
+  } = {},
 ) {
-  const session = authenticated ? getSession() : null;
-
   if (getDataMode() === "static") {
+    const session = authenticated ? getSession() : null;
     try {
       return await staticRequest(path, {
         method,
@@ -129,7 +127,7 @@ export async function request(
         session,
       });
     } catch (error) {
-      if (error.status === 401 && authenticated) {
+      if (error.status === 401 && notifyExpired) {
         saveSession(null);
         window.dispatchEvent(new Event("turnera:expired"));
       }
@@ -146,6 +144,7 @@ export async function request(
       data: body,
       signal,
       authenticated,
+      notifyExpired,
     });
 
     return response.data;
@@ -179,10 +178,31 @@ export async function request(
 }
 
 export const api = {
-  login: (body) =>
-    request("/auth/login", { method: "POST", body, authenticated: false }),
+  login: async (body) => {
+    const data = await request("/auth/login", {
+      method: "POST",
+      body,
+      authenticated: false,
+    });
+    // eslint-disable-next-line no-unused-vars
+    const { token, tokenType, ...usuario } = data;
+    // El token real queda en la cookie HttpOnly; solo el modo demo lo guarda para simularla.
+    if (getDataMode() === "static") {
+      saveSession({ token, expiresAt: Date.now() + data.expiresIn * 1000 });
+    }
+    return usuario;
+  },
   register: (body) =>
     request("/auth/register", { method: "POST", body, authenticated: false }),
+  // Sesión actual sin el token; un 401 acá significa "no hay sesión", no "venció".
+  me: (signal) => request("/auth/me", { signal, notifyExpired: false }),
+  logout: async () => {
+    try {
+      await request("/auth/logout", { method: "POST", notifyExpired: false });
+    } finally {
+      saveSession(null);
+    }
+  },
   doctors: (filters, signal) =>
     request("/doctores?" + query(filters), { signal, authenticated: false }),
   
