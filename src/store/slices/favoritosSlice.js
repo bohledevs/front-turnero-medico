@@ -6,15 +6,15 @@ import { createSelector, createSlice } from "@reduxjs/toolkit";
 const favoritosSlice = createSlice({
   name: "favoritos",
   initialState: {
-    usuarioId: null, // dueño de la lista; null = navegando sin sesión
+    duenio: null, // dueño de la lista ("paciente-1", "medico-10"…); null = navegando sin sesión
     items: [], // profesionales favoritos: { id, nombre, apellido, especialidadNombre, ... }
   },
   reducers: {
-    // dispatch(cambiarUsuarioFavoritos({ usuarioId, items }))
+    // dispatch(cambiarUsuarioFavoritos({ duenio, items }))
     // Al cambiar de cuenta se reemplaza la lista entera por la del nuevo usuario,
     // así nadie ve los favoritos de quien usó el navegador antes.
     cambiarUsuarioFavoritos: (state, action) => {
-      state.usuarioId = action.payload.usuarioId ?? null;
+      state.duenio = action.payload.duenio ?? null;
       state.items = action.payload.items ?? [];
     },
 

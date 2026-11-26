@@ -28,5 +28,5 @@ store.subscribe(() => {
   const favoritos = store.getState().favoritos;
   if (favoritos === favoritosGuardados) return;
   favoritosGuardados = favoritos;
-  guardarFavoritos(favoritos.usuarioId, favoritos.items);
+  guardarFavoritos(favoritos.duenio, favoritos.items);
 });

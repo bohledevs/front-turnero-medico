@@ -8,7 +8,7 @@ import {
   sesionVencida,
 } from "../store/slices/authSlice";
 import { cambiarUsuarioFavoritos } from "../store/slices/favoritosSlice";
-import { leerFavoritos } from "../store/favoritosStorage";
+import { duenioFavoritos, leerFavoritos } from "../store/favoritosStorage";
 
 // Efectos de la sesión que no son de ninguna pantalla en particular.
 // El estado está en el authSlice; la sesión se restaura al arrancar (main.jsx).
@@ -27,12 +27,11 @@ export function AuthProvider({ children }) {
 
   // Y se cargan los favoritos de esa cuenta. Mientras se recupera la sesión después de un F5
   // todavía no se sabe de quién son, así que se espera en lugar de mostrar los de invitado.
+  const duenio = duenioFavoritos(usuario);
   useEffect(() => {
     if (estado === "verificando") return;
-    dispatch(
-      cambiarUsuarioFavoritos({ usuarioId: userId ?? null, items: leerFavoritos(userId) }),
-    );
-  }, [dispatch, userId, estado]);
+    dispatch(cambiarUsuarioFavoritos({ duenio, items: leerFavoritos(duenio) }));
+  }, [dispatch, duenio, estado]);
 
   // La capa de API avisa con eventos: 401 en una ruta protegida o cambio de fuente de datos.
   useEffect(() => {
