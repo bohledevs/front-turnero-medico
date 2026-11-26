@@ -186,14 +186,26 @@ export async function request(
 }
 
 export const api = {
-  login: (body) =>
-    request("/auth/login", { method: "POST", body, authenticated: false }),
+  login: async (body) => {
+    const data = await request("/auth/login", {
+      method: "POST",
+      body,
+      authenticated: false,
+    });
+    saveSession({ ...data, expiresAt: Date.now() + data.expiresIn * 1000 });
+    return data;
+  },
   register: (body) =>
     request("/auth/register", { method: "POST", body, authenticated: false }),
   // Sesión actual sin el token; un 401 acá significa "no hay sesión", no "venció".
   me: (signal) => request("/auth/me", { signal, notifyExpired: false }),
-  logout: () =>
-    request("/auth/logout", { method: "POST", notifyExpired: false }),
+  logout: async () => {
+    try {
+      await request("/auth/logout", { method: "POST", notifyExpired: false });
+    } finally {
+      saveSession(null);
+    }
+  },
   doctors: (filters, signal) =>
     request("/doctores?" + query(filters), { signal, authenticated: false }),
   
