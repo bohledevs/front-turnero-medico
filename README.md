@@ -117,6 +117,9 @@ Las pruebas cubren permisos de transición, estados terminales, límites UTF-8 d
 El flujo y las pantallas de la aplicación están disponibles en el siguiente prototipo:
 
 [Ver prototipo en Figma](https://www.figma.com/design/sG2DFO6kln0dmeYP3QUpFB/Front-turnera-medica?node-id=0-1&t=uiRZF5BWhdD9WePY-1)
+
+El wireflow por rol, la relación de cada pantalla con los endpoints, las pantallas de ingreso y registro, las versiones móviles y los estados de carga, vacío, error y confirmación están en [docs/WIREFLOW.md](docs/WIREFLOW.md). Las capturas están en `docs/mockups/` y el diagrama exportado en `docs/wireflow.svg` y `docs/wireflow.png`.
+
 ## Estructura
 
 ```text
