@@ -3,23 +3,36 @@ import { useDispatch, useSelector } from "react-redux";
 import { reiniciarFiltrosTurnos } from "../store/slices/filtrosTurnosSlice";
 import {
   cerrarSesion,
+  selectEstadoSesion,
   selectUsuario,
   sesionVencida,
 } from "../store/slices/authSlice";
+import { cambiarUsuarioFavoritos } from "../store/slices/favoritosSlice";
+import { duenioFavoritos, leerFavoritos } from "../store/favoritosStorage";
 
 // Efectos de la sesión que no son de ninguna pantalla en particular.
 // El estado está en el authSlice; la sesión se restaura al arrancar (main.jsx).
 export function AuthProvider({ children }) {
   const dispatch = useDispatch();
   const usuario = useSelector(selectUsuario);
-  const userId = usuario?.id;
+  const estado = useSelector(selectEstadoSesion);
   const expiresAt = usuario?.expiresAt;
+
+  // Cuenta actual: rol + id, porque un paciente y un médico pueden tener el mismo id.
+  const duenio = duenioFavoritos(usuario);
 
   // Cuando cambia quién está logueado (ingreso, cierre o vencimiento de la sesión),
   // los filtros de turnos vuelven a su valor inicial.
   useEffect(() => {
     dispatch(reiniciarFiltrosTurnos());
-  }, [dispatch, userId]);
+  }, [dispatch, duenio]);
+
+  // Y se cargan los favoritos de esa cuenta. Mientras se recupera la sesión después de un F5
+  // todavía no se sabe de quién son, así que se espera en lugar de mostrar los de invitado.
+  useEffect(() => {
+    if (estado === "verificando") return;
+    dispatch(cambiarUsuarioFavoritos({ duenio, items: leerFavoritos(duenio) }));
+  }, [dispatch, duenio, estado]);
 
   // La capa de API avisa con eventos: 401 en una ruta protegida o cambio de fuente de datos.
   useEffect(() => {

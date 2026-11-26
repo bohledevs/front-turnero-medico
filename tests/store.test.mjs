@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import { configureStore } from "@reduxjs/toolkit";
 import favoritosReducer, {
   agregarFavorito,
+  cambiarUsuarioFavoritos,
   quitarFavorito,
+  selectFavoritos,
   selectEsFavorito,
   selectFavoritosPorEspecialidad,
   selectIdsFavoritos,
@@ -18,6 +20,28 @@ import filtrosTurnosReducer, {
   reiniciarFiltrosTurnos,
   selectFiltrosTurnos,
 } from "../src/store/slices/filtrosTurnosSlice.js";
+import {
+  claveFavoritos,
+  duenioFavoritos,
+  descartarFavoritosCompartidos,
+  guardarFavoritos,
+  leerFavoritos,
+} from "../src/store/favoritosStorage.js";
+
+// localStorage en memoria: Node no lo trae habilitado por defecto.
+const almacenamiento = new Map();
+Object.defineProperty(globalThis, "localStorage", {
+  configurable: true,
+  value: {
+    getItem: (clave) => (almacenamiento.has(clave) ? almacenamiento.get(clave) : null),
+    setItem: (clave, valor) => almacenamiento.set(clave, String(valor)),
+    removeItem: (clave) => almacenamiento.delete(clave),
+    key: (indice) => [...almacenamiento.keys()][indice] ?? null,
+    get length() {
+      return almacenamiento.size;
+    },
+  },
+});
 
 const nuevoStore = () =>
   configureStore({
@@ -125,4 +149,52 @@ test("selectores memoizados: misma referencia si los favoritos no cambian", () =
   store.dispatch(quitarFavorito(1));
   assert.notEqual(selectFavoritosPorEspecialidad(store.getState()), grupos);
   assert.deepEqual(selectFavoritosPorEspecialidad(store.getState()), []);
+});
+
+test("favoritos por usuario: al cambiar de cuenta se reemplaza la lista", () => {
+  const store = nuevoStore();
+  store.dispatch(cambiarUsuarioFavoritos({ duenio: "paciente-1", items: [] }));
+  store.dispatch(agregarFavorito(doctor(10, "Cardiología")));
+
+  // Entra otra cuenta: no ve los favoritos de la anterior.
+  store.dispatch(cambiarUsuarioFavoritos({ duenio: "paciente-2", items: [doctor(20)] }));
+  assert.equal(store.getState().favoritos.duenio, "paciente-2");
+  assert.deepEqual(selectFavoritos(store.getState()).map((item) => item.id), [20]);
+
+  // Cierra sesión: lista de invitado vacía.
+  store.dispatch(cambiarUsuarioFavoritos({ duenio: null }));
+  assert.deepEqual(store.getState().favoritos, { duenio: null, items: [] });
+});
+
+test("favoritos por usuario: cada cuenta se guarda bajo su propia clave", () => {
+  almacenamiento.clear();
+  // Un paciente y un médico pueden tener el mismo id: el dueño incluye el rol.
+  const paciente = duenioFavoritos({ id: 1, rol: "PACIENTE" });
+  const medico = duenioFavoritos({ id: 1, rol: "MEDICO" });
+  assert.equal(paciente, "paciente-1");
+  assert.equal(duenioFavoritos(null), null);
+
+  guardarFavoritos(paciente, [doctor(10)]);
+  guardarFavoritos(medico, [doctor(20), doctor(21)]);
+  guardarFavoritos(null, [doctor(30)]);
+
+  assert.equal(claveFavoritos(paciente), "turnera.favoritos.paciente-1");
+  assert.equal(claveFavoritos(undefined), "turnera.favoritos.invitado");
+  assert.deepEqual(leerFavoritos(paciente).map((item) => item.id), [10]);
+  assert.deepEqual(leerFavoritos(medico).map((item) => item.id), [20, 21]);
+  assert.deepEqual(leerFavoritos(null).map((item) => item.id), [30]);
+  assert.deepEqual(leerFavoritos("paciente-3"), []);
+
+  // Datos corruptos no rompen la app.
+  almacenamiento.set("turnera.favoritos.paciente-4", "{no es json");
+  assert.deepEqual(leerFavoritos("paciente-4"), []);
+
+  // Se descartan las listas sin dueño claro: la compartida y las guardadas solo por id.
+  almacenamiento.set("turnera.favoritos", JSON.stringify([doctor(99)]));
+  almacenamiento.set("turnera.favoritos.1", JSON.stringify([doctor(98)]));
+  descartarFavoritosCompartidos();
+  assert.equal(almacenamiento.has("turnera.favoritos"), false);
+  assert.equal(almacenamiento.has("turnera.favoritos.1"), false);
+  assert.equal(almacenamiento.has("turnera.favoritos.paciente-1"), true);
+  assert.equal(almacenamiento.has("turnera.favoritos.invitado"), true);
 });
